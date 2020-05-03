@@ -2,19 +2,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.Line2D;
 import java.util.ArrayList;
 
 public class UI {
     private JFrame mainFrame=new JFrame("Jsomnia");
-    private int width=1000;
-    private int height=600;
     private ArrayList<Request> requests=new ArrayList<>();
-    private JFrame newRequestGetter=new JFrame("New Request");
     public UI() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
         UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         mainFrame.setLayout(null);
-        mainFrame.setSize(width,height);
+        mainFrame.setSize(1000,600);
         mainFrame.getContentPane().setBackground(Color.darkGray);
         //Left
         JButton newRequest=new JButton("New Request");
@@ -23,28 +19,42 @@ public class UI {
         newRequest.setLocation(25,25);
         newRequest.addActionListener(new newRequestHandler());
         mainFrame.add(newRequest);
-
+        int j=0;
+        for(Request i :requests){
+            JButton request=new JButton(i.getName());
+            request.setSize(150,50);
+            request.setLocation(25,80+j*50);
+            mainFrame.add(request);
+            j++;
+        }
         //Center
 
         //URL
         JTextField url=new JTextField();
-        url.setSize(265,40);
+        url.setSize(260,40);
         url.setLocation(265,5);
         mainFrame.add(url);
+
+        JComboBox urlType=new JComboBox();
+        urlType.addItem("GET");
+        urlType.addItem("POST");
+        urlType.addItem("PUT");
+        urlType.addItem("PATCH");
+        urlType.addItem("DELETE");
+        urlType.setSize(65,40);
+        urlType.setLocation(200,5);
+        mainFrame.add(urlType);
 
         JButton send=new JButton("SEND");
         send.setSize(75,40);
         send.setLocation(525,5);
         mainFrame.add(send);
 
-        JComboBox urlType=new JComboBox();
-        urlType.addItem("GET");
-        urlType.addItem("POST");
-        urlType.addItem("PUT");
-        urlType.addItem("WATCH");
-        urlType.setSize(65,40);
-        urlType.setLocation(200,5);
-        mainFrame.add(urlType);
+        //Header panel
+        JPanel header=new JPanel();
+        header.setLayout(null);
+
+
 
 
         //Body panel
@@ -79,10 +89,12 @@ public class UI {
         mainFrame.setVisible(true);
 
     }
-    private class newRequestHandler implements ActionListener {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
+    private class NewRequest{
+        private JFrame newRequestGetter=new JFrame("New Request");
+        private JTextField name;
+        private JComboBox reqType;
+        private Request request;
+        public NewRequest() {
             newRequestGetter.setLayout(null);
             newRequestGetter.setSize(400,150);
 
@@ -93,10 +105,21 @@ public class UI {
             newRequestGetter.add(namePrint);
 
 
-            JTextField name=new JTextField();
+            name=new JTextField();
             name.setSize(250,40);
             name.setLocation(50,5);
             newRequestGetter.add(name);
+
+            reqType=new JComboBox();
+            reqType.addItem("GET");
+            reqType.addItem("POST");
+            reqType.addItem("PUT");
+            reqType.addItem("PATCH");
+            reqType.addItem("DELETE");
+            reqType.setSize(65,40);
+            reqType.setLocation(300,5);
+            newRequestGetter.add(reqType);
+            newRequestGetter.setVisible(true);
 
             JButton create=new JButton("CREATE");
             create.addActionListener(new createReqHandler());
@@ -104,22 +127,29 @@ public class UI {
             create.setLocation(125,50);
             newRequestGetter.add(create);
 
-            JComboBox reqType=new JComboBox();
-            reqType.addItem("GET");
-            reqType.addItem("POST");
-            reqType.addItem("PUT");
-            reqType.addItem("WATCH");
-            reqType.setSize(65,40);
-            reqType.setLocation(300,5);
-            newRequestGetter.add(reqType);
-
-            newRequestGetter.setVisible(true);
+        }
+        private class createReqHandler implements ActionListener {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                requests.add(new Request(name.getText(),reqType.getSelectedItem().toString()));
+                int j=0;
+                for(Request i :requests){
+                    JButton request=new JButton(i.getName());
+                    request.setSize(150,50);
+                    request.setLocation(25,80+j*50);
+                    mainFrame.add(request);
+                    j++;
+                }
+                newRequestGetter.setVisible(false);
+            }
         }
     }
-    private class createReqHandler implements ActionListener{
+    private class newRequestHandler implements ActionListener {
+
         @Override
         public void actionPerformed(ActionEvent e) {
-            newRequestGetter.setVisible(false);
+            NewRequest newRequest=new NewRequest();
         }
     }
+
 }
