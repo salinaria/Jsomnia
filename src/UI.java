@@ -5,12 +5,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class UI {
     private JFrame mainFrame = new JFrame("Jsomnia");
     private int width = 1000;
     private int height = 600;
     private ArrayList<Request> requests = new ArrayList<>();
+    private HashMap<JButton,JButton>reqButtons=new HashMap<>();
     private JPanel left = new JPanel();
     private JPanel center = new JPanel();
     private JPanel right = new JPanel();
@@ -23,6 +25,7 @@ public class UI {
     private JComboBox bodyType;
     private JTextArea bodyFiled;
     private JTabbedPane centerTab;
+    private JButton save;
 
     public UI() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
         UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
@@ -39,10 +42,26 @@ public class UI {
         });
         mainFrame.setMinimumSize(new Dimension(600, 400));
         mainFrame.getContentPane().setBackground(Color.darkGray);
+        left.setBackground(Color.darkGray);
+        center.setBackground(Color.darkGray);
+        center.setVisible(false);
         mainFrame.setVisible(true);
     }
 
     public void showGui() {
+
+        ImageIcon jsomniaLogo = new ImageIcon("src/Jsomnia.png");
+        JLabel jsomnia = new JLabel(jsomniaLogo);
+        jsomnia.setSize(200, 50);
+        jsomnia.setLocation(0, 0);
+        mainFrame.add(jsomnia);
+
+        MenuBar menuBar = new MenuBar();
+        Menu application = new Menu("Application");
+        menuBar.add(application);
+        mainFrame.setMenuBar(menuBar);
+
+
         //Left
 
         left.setLayout(null);
@@ -54,8 +73,8 @@ public class UI {
 
         JButton newRequest = new JButton("New Request");
         newRequest.setSize(150, 50);
-        newRequest.setBackground(Color.magenta);
-        newRequest.setLocation(25, 5);
+        newRequest.setBackground(Color.green);
+        newRequest.setLocation(25, 25);
         newRequest.addActionListener(new newRequestHandler());
         left.add(newRequest);
 
@@ -66,11 +85,11 @@ public class UI {
         for (Request i : requests) {
             JButton delete = new JButton(del);
             delete.setSize(30, 30);
-            delete.setLocation(160, 130 + j * 35);
+            delete.setLocation(160, 155 + j * 35);
             left.add(delete);
             JButton req = new JButton(i.getName());
             req.setSize(150, 30);
-            req.setLocation(5, 80 * j * 35);
+            req.setLocation(5, 135 + j * 35);
             left.add(req);
             j++;
         }
@@ -78,9 +97,16 @@ public class UI {
         //Center
 
         center.setLayout(null);
-        center.setSize((width - 200) / 2, height - 100);
-        center.setLocation(200, 50);
+        center.setSize((width - 200) / 2, height);
+        center.setLocation(200, 0);
         mainFrame.add(center);
+
+        //Save Button
+        save = new JButton("SAVE");
+        save.setSize(75, 40);
+        save.setLocation((width - 200) / 2 - 80, height - 171);
+        center.add(save);
+
 
         //URL
 
@@ -121,11 +147,11 @@ public class UI {
         bodyType.addItem("EDN");
         bodyType.setSize(65, 40);
         bodyType.setLocation(5, 5);
-        body.add(bodyType);
+        //body.add(bodyType);
 
         bodyFiled = new JTextArea("...");
         bodyFiled.setLocation(5, 50);
-        bodyFiled.setSize((width-200)/2-10,height-250);
+        bodyFiled.setSize((width - 200) / 2 - 10, height - 300);
         body.add(bodyFiled);
 
         //Center tab
@@ -133,20 +159,32 @@ public class UI {
         centerTab = new JTabbedPane();
         centerTab.addTab("Body", body);
         centerTab.addTab("Header", header);
-        centerTab.setSize((width - 200) / 2, height -150);
+        centerTab.setSize((width - 200) / 2, height - 175);
         centerTab.setLocation(0, 50);
         center.add(centerTab);
+
+        //Right
+
+
+        right = new JPanel();
+        right.setLayout(null);
+        right.setSize((width - 200) / 2, height);
+        right.setLocation(width - ((width - 200) / 2), 0);
+        right.setBackground(Color.darkGray);
+        mainFrame.add(right);
+
     }
 
     public void reSize() {
-        left.setSize(200,height-100);
-
-        center.setSize((width - 200) / 2, height - 100);
+        left.setSize(200, height - 100);
+        center.setSize((width - 200) / 2, height);
+        right.setSize((width - 200) / 2, height);
+        right.setLocation(width - ((width - 200) / 2), 0);
         url.setSize((width - 200) / 2 - 150, 40);
         send.setLocation((width - 200) / 2 - 80, 5);
-        centerTab.setSize((width - 200) / 2, height - 50);
-        bodyFiled.setSize((width-200)/2-10,height-250);
-
+        centerTab.setSize((width - 200) / 2, height - 175);
+        bodyFiled.setSize((width - 200) / 2 - 10, height - 300);
+        save.setLocation((width - 200) / 2 - 80, height - 171);
     }
 
     private class NewRequest {
@@ -196,20 +234,34 @@ public class UI {
                 requests.add(new Request(name.getText(), reqType.getSelectedItem().toString()));
                 int j = 0;
                 ImageIcon del = new ImageIcon("src/delete.png");
+                delReq delReq = new delReq();
+                loadReq loadReq = new loadReq();
+                for(JButton button:reqButtons.keySet()){
+                    button.setVisible(false);
+                    reqButtons.get(button).setVisible(false);
+                }
+                reqButtons.clear();
                 for (Request i : requests) {
                     JButton delete = new JButton(del);
+                    delete.setName(i.getName());
                     delete.setSize(30, 30);
                     delete.setLocation(160, 80 + j * 35);
-                    mainFrame.add(delete);
+                    delete.addActionListener(delReq);
+                    left.add(delete);
                     JButton req = new JButton(i.getName());
+                    reqButtons.put(req,delete);
                     req.setSize(150, 30);
                     req.setLocation(5, 80 + j * 35);
-                    mainFrame.add(req);
+                    req.addActionListener(loadReq);
+                    left.add(req);
                     j++;
                 }
                 newRequestGetter.setVisible(false);
+                urlType.setSelectedItem(reqType.getSelectedItem().toString());
+                center.setVisible(true);
             }
         }
+
     }
 
     private class newRequestHandler implements ActionListener {
@@ -220,5 +272,60 @@ public class UI {
         }
     }
 
+    private class loadReq implements ActionListener {
 
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (e.getSource().equals(new JButton())) {
+                JButton button = (JButton) e.getSource();
+                for (Request i : requests) {
+                    if (i.getName().equals(button.getName())) {
+                        urlType.setSelectedItem(i.getUrlType());
+                        bodyFiled.setText(i.getBody());
+                        url.setText(i.getUrl());
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private class delReq implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JButton button = (JButton) e.getSource();
+
+            for (Request i : requests) {
+                if (i.getName().equals(button.getName())) {
+                    requests.remove(i);
+                    for(JButton button1 :reqButtons.keySet()){
+                        button1.setVisible(false);
+                        reqButtons.get(button1).setVisible(false);
+                    }
+                    reqButtons.clear();
+                    int j=0;
+                    delReq delReq = new delReq();
+                    loadReq loadReq = new loadReq();
+                    ImageIcon del = new ImageIcon("src/delete.png");
+                    for (Request k : requests) {
+                        JButton delete = new JButton(del);
+                        delete.setName(k.getName());
+                        delete.setSize(30, 30);
+                        delete.setLocation(160, 80 + j * 35);
+                        delete.addActionListener(delReq);
+                        left.add(delete);
+                        JButton req = new JButton(k.getName());
+                        reqButtons.put(req,delete);
+                        req.setSize(150, 30);
+                        req.setLocation(5, 80 + j * 35);
+                        req.addActionListener(loadReq);
+                        left.add(req);
+                        j++;
+                    }
+                    break;
+                }
+            }
+        }
+    }
 }
