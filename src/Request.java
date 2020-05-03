@@ -20,4 +20,16 @@ public class Request {
     public String getUrlType() {
         return urlType;
     }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public HashMap<String, String> getHeaders() {
+        return headers;
+    }
 }
