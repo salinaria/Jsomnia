@@ -30,7 +30,7 @@ public class UI {
     private JTabbedPane centerTab;
     private JButton save;
     private HashMap<JLabel, JLabel> headers = new HashMap<>();
-    private ArrayList<JButton>headerButtons=new ArrayList<>();
+    private ArrayList<JButton> headerButtons = new ArrayList<>();
     private String onRequest;
 
     public UI() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
@@ -317,7 +317,7 @@ public class UI {
                 newRequestGetter.setVisible(false);
                 urlType.setSelectedItem(reqType.getSelectedItem().toString());
                 center.setVisible(true);
-                onRequest=name.getText();
+                onRequest = name.getText();
             }
         }
     }
@@ -341,9 +341,39 @@ public class UI {
                     urlType.setSelectedItem(i.getUrlType().toString());
                     bodyFiled.setText(i.getBody());
                     url.setText(i.getUrl());
+                    for(JLabel label:headers.keySet()){
+                        label.setVisible(false);
+                        headers.get(label).setVisible(false);
+                    }
+                    for(JButton button1:headerButtons){
+                        button1.setVisible(false);
+                    }
+                    headerButtons.clear();
                     headers.clear();
                     for (String head : i.getHeaders().keySet()) {
                         headers.put(new JLabel(head), new JLabel(i.getHeaders().get(head)));
+                    }
+                    int k = 0;
+                    JLabel value;
+                    delHeader delHeader=new delHeader();
+                    for (JLabel label : headers.keySet()) {
+                        label.setSize(100, 30);
+                        label.setLocation(10, 20 + k * 40);
+                        value = headers.get(label);
+                        value.setSize(100, 30);
+                        value.setLocation(115, 20 + k * 40);
+                        header.add(label);
+                        header.add(value);
+                        label.setVisible(true);
+                        value.setVisible(true);
+                        JButton headerButton = new JButton(del);
+                        headerButton.addActionListener(delHeader);
+                        headerButton.setName(label.getText());
+                        headerButton.setSize(30, 30);
+                        headerButton.setLocation(220, 20 + k * 40);
+                        headerButtons.add(headerButton);
+                        header.add(headerButton);
+                        k++;
                     }
                     onRequest = i.getName();
                     center.setVisible(true);
@@ -418,6 +448,7 @@ public class UI {
         private JTextField headerFiled = new JTextField();
         private JTextField valueFiled = new JTextField();
         private JFrame newHead = new JFrame("New Header");
+
         @Override
         public void actionPerformed(ActionEvent e) {
             newHead.setLayout(null);
@@ -441,7 +472,7 @@ public class UI {
             valueFiled.setLocation(245, 20);
             newHead.add(valueFiled);
 
-            addHeader addHeader=new addHeader();
+            addHeader addHeader = new addHeader();
             JButton add = new JButton("ADD");
             add.setSize(70, 35);
             add.setLocation(160, 65);
@@ -451,39 +482,42 @@ public class UI {
             newHead.setVisible(true);
 
         }
-        private class addHeader implements ActionListener{
+
+        private class addHeader implements ActionListener {
             @Override
             public void actionPerformed(ActionEvent e) {
-                for(JLabel label : headers.keySet()){
+                for (JLabel label : headers.keySet()) {
                     label.setVisible(false);
                     headers.get(label).setVisible(false);
                 }
-                for(JButton button:headerButtons){
+                for (JButton button : headerButtons) {
                     button.setVisible(false);
                 }
                 headerButtons.clear();
-                for(Request i:requests){
-                    if(i.getName().equals(onRequest)){
-                        i.addHeader(headerFiled.getText(),valueFiled.getText());
-                        JLabel head=new JLabel(headerFiled.getText());
-                        JLabel value=new JLabel(valueFiled.getText());
-                        headers.put(head,value);
+                for (Request i : requests) {
+                    if (i.getName().equals(onRequest)) {
+                        i.addHeader(headerFiled.getText(), valueFiled.getText());
+                        JLabel head = new JLabel(headerFiled.getText());
+                        JLabel value = new JLabel(valueFiled.getText());
+                        headers.put(head, value);
                         int k = 0;
+                        delHeader delHeader=new delHeader();
                         ImageIcon del = new ImageIcon("src/delete.png");
                         for (JLabel label : headers.keySet()) {
                             label.setSize(100, 30);
                             label.setLocation(10, 20 + k * 40);
-                            value=headers.get(label);
-                            value.setSize(100,30);
-                            value.setLocation(115,20 + k * 40);
+                            value = headers.get(label);
+                            value.setSize(100, 30);
+                            value.setLocation(115, 20 + k * 40);
                             header.add(label);
                             header.add(value);
                             label.setVisible(true);
                             value.setVisible(true);
-                            JButton headerButton=new JButton(del);
+                            JButton headerButton = new JButton(del);
+                            headerButton.addActionListener(delHeader);
                             headerButton.setName(label.getText());
-                            headerButton.setSize(30,30);
-                            headerButton.setLocation(220,20 + k * 40);
+                            headerButton.setSize(30, 30);
+                            headerButton.setLocation(220, 20 + k * 40);
                             headerButtons.add(headerButton);
                             header.add(headerButton);
                             k++;
@@ -496,9 +530,54 @@ public class UI {
                 }
             }
         }
-        private class delHeader{
-
-            
+    }
+    private class delHeader implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JButton delete = (JButton) e.getSource();
+            for (Request i : requests) {
+                if (i.getName().equals(onRequest)) {
+                    i.getHeaders().remove(delete.getName());
+                    break;
+                }
+            }
+            for (JLabel label : headers.keySet()) {
+                label.setVisible(false);
+                headers.get(label).setVisible(false);
+            }
+            for(JLabel label:headers.keySet()){
+                if(label.getText().equals(delete.getName())){
+                    headers.remove(label);
+                    break;
+                }
+            }
+            for (JButton button : headerButtons) {
+                button.setVisible(false);
+            }
+            headerButtons.clear();
+            int k = 0;
+            JLabel value;
+            delHeader delHeader=new delHeader();
+            ImageIcon del = new ImageIcon("src/delete.png");
+            for (JLabel label : headers.keySet()) {
+                label.setSize(100, 30);
+                label.setLocation(10, 20 + k * 40);
+                value = headers.get(label);
+                value.setSize(100, 30);
+                value.setLocation(115, 20 + k * 40);
+                header.add(label);
+                header.add(value);
+                label.setVisible(true);
+                value.setVisible(true);
+                JButton headerButton = new JButton(del);
+                headerButton.addActionListener(delHeader);
+                headerButton.setName(label.getText());
+                headerButton.setSize(30, 30);
+                headerButton.setLocation(220, 20 + k * 40);
+                headerButtons.add(headerButton);
+                header.add(headerButton);
+                k++;
+            }
         }
     }
 }
