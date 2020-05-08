@@ -20,6 +20,7 @@ public class UI {
     private JPanel right = new JPanel();
     private JPanel leftBorder = new JPanel();
     private JPanel rightBorder = new JPanel();
+    private JPanel topBorder = new JPanel();
     private JComboBox urlType;
     private JTextField url;
     private JButton send;
@@ -31,7 +32,12 @@ public class UI {
     private JButton save;
     private HashMap<JLabel, JLabel> headers = new HashMap<>();
     private ArrayList<JButton> headerButtons = new ArrayList<>();
+    private JButton newHeader;
     private String onRequest;
+    private JPanel topRight;
+    private JTabbedPane rightTab;
+    private JLabel statusCode=new JLabel("OK200");
+    private JLabel responseTime=new JLabel("2.3");
 
     public UI() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
         UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
@@ -52,6 +58,7 @@ public class UI {
         colors = Color.RGBtoHSB(40, 41, 37, colors);
         mainFrame.getContentPane().setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
         center.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
+        right.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
         bodyFiled.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
         bodyFiled.setForeground(Color.WHITE);
         centerTab.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
@@ -59,7 +66,11 @@ public class UI {
         left.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
         body.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
         centerTab.setForeground(Color.getHSBColor(colors[0], colors[1], colors[2]));
-        center.setVisible(false);
+        centerTab.setVisible(false);
+        url.setVisible(false);
+        urlType.setVisible(false);
+        send.setVisible(false);
+        save.setVisible(false);
         mainFrame.setVisible(true);
     }
 
@@ -75,9 +86,15 @@ public class UI {
         leftBorder.setLocation(200, 0);
         mainFrame.add(leftBorder);
 
-        leftBorder.setSize(2, height);
-        leftBorder.setLocation(200 + (width - 200) / 2, 0);
+        rightBorder.setSize(2, height);
+        rightBorder.setLocation(200 + (width - 200) / 2, 0);
         mainFrame.add(rightBorder);
+
+        topBorder.setSize((width - 200) / 2, 50);
+        topBorder.setLocation(0, 0);
+        topBorder.setLayout(null);
+        topBorder.setBackground(Color.WHITE);
+        center.add(topBorder);
 
 
         MenuBar menuBar = new MenuBar();
@@ -85,17 +102,14 @@ public class UI {
         Menu application = new Menu("Application");
         menuBar.add(application);
 
-        Menu edit = new Menu("Edit");
-        menuBar.add(edit);
-
         Menu view = new Menu("View");
+        MenuItem fullScreen = new MenuItem("Toggle Full Screen");
+        UI.fullScreen fullScreen1 = new fullScreen();
+        fullScreen.addActionListener(fullScreen1);
+        MenuItem sidebar = new MenuItem("Toggle Sidebar");
+        view.add(fullScreen);
+        view.add(sidebar);
         menuBar.add(view);
-
-        Menu window = new Menu("Window");
-        menuBar.add(window);
-
-        Menu tools = new Menu("Tools");
-        menuBar.add(tools);
 
         Menu help = new Menu("Help");
         MenuItem about = new MenuItem("About");
@@ -130,6 +144,7 @@ public class UI {
             delete.setSize(30, 30);
             delete.setLocation(160, 155 + j * 35);
             left.add(delete);
+            delete.setBackground(Color.RED);
             JButton req = new JButton(i.getName());
             req.setSize(150, 30);
             req.setLocation(5, 135 + j * 35);
@@ -162,28 +177,31 @@ public class UI {
         urlType.addItem("PATCH");
         urlType.addItem("DELETE");
         urlType.setSize(65, 40);
-        urlType.setLocation(0, 5);
-        center.add(urlType);
+        urlType.setLocation(3, 5);
+        topBorder.add(urlType);
 
         url = new JTextField("...");
         url.setSize((width - 200) / 2 - 150, 40);
         url.setLocation(65, 5);
-        center.add(url);
+        topBorder.add(url);
 
+        sendReq sendReq=new sendReq();
         send = new JButton("SEND");
+        send.addActionListener(sendReq);
         send.setSize(75, 40);
         send.setLocation((width - 200) / 2 - 80, 5);
-        center.add(send);
+        topBorder.add(send);
 
         //Header panel
-
+        float[] colors = new float[3];
+        colors = Color.RGBtoHSB(40, 41, 37, colors);
         header = new JPanel();
         header.setLayout(null);
-
+        header.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
         newHead newHead = new newHead();
-        JButton newHeader = new JButton("New Header");
-        newHeader.setSize(100, 50);
-        newHeader.setLocation(100, 300);
+        newHeader = new JButton("New Header");
+        newHeader.setSize(100, 40);
+        newHeader.setLocation(10, height - 210);
         newHeader.addActionListener(newHead);
         header.add(newHeader);
 
@@ -195,9 +213,8 @@ public class UI {
 
         bodyType = new JComboBox();
         bodyType.addItem("JSON");
-        bodyType.addItem("XML");
-        bodyType.addItem("YAML");
-        bodyType.addItem("EDN");
+        bodyType.addItem("FormData");
+        bodyType.addItem("BinaryFile");
         bodyType.setSize(65, 40);
         bodyType.setLocation(5, 5);
         body.add(bodyType);
@@ -218,12 +235,38 @@ public class UI {
 
         //Right
 
-
         right = new JPanel();
         right.setLayout(null);
         right.setSize((width - 200) / 2, height);
         right.setLocation(width - ((width - 200) / 2), 0);
         mainFrame.add(right);
+
+        topRight = new JPanel();
+        topRight.setLayout(null);
+        topRight.setSize((width - 200) / 2, 50);
+        topRight.setLocation(0, 0);
+        topRight.setBackground(Color.WHITE);
+
+        responseTime.setSize(80,40);
+        responseTime.setLocation(100,5);
+        responseTime.setVisible(false);
+        topRight.add(responseTime);
+
+        statusCode.setSize(80,40);
+        statusCode.setLocation(10,5);
+        statusCode.setVisible(false);
+        topRight.add(statusCode);
+
+
+
+        right.add(topRight);
+
+        rightTab = new JTabbedPane();
+        rightTab.setSize((width - 200) / 2 - 1, height - 122);
+        rightTab.setLocation(2, 50);
+        right.add(rightTab);
+
+
 
     }
 
@@ -238,11 +281,27 @@ public class UI {
         leftBorder.setSize(2, height);
         rightBorder.setLocation(200 + (width - 200) / 2, 0);
         rightBorder.setSize(2, height);
+        topBorder.setSize((width - 200) / 2, 50);
+        topRight.setSize((width-200)/2,50);
         left.setSize(200, height - 100);
         center.setSize((width - 200) / 2, height);
         right.setSize((width - 200) / 2, height);
         right.setLocation(width - ((width - 200) / 2), 0);
-
+        newHeader.setLocation((width - 200) / 2 - 190, height - 210);
+        int k = 0;
+        for (JLabel label : headers.keySet()) {
+            label.setSize((width - 200) / 8, 30);
+            headers.get(label).setSize((width - 200) / 8, 30);
+            headers.get(label).setLocation((width - 200) / 8 + 20, 20 + k * 40);
+            k++;
+        }
+        k = 0;
+        for (JButton button : headerButtons) {
+            button.setLocation((width - 200) / 4 + 30, 20 + k * 40);
+            k++;
+        }
+        statusCode.setLocation(10,5);
+        responseTime.setLocation(100,5);
     }
 
     private class NewRequest {
@@ -303,6 +362,7 @@ public class UI {
                     JButton delete = new JButton(del);
                     delete.setName(i.getName());
                     delete.setSize(30, 30);
+                    delete.setBackground(Color.RED);
                     delete.setLocation(160, 80 + j * 35);
                     delete.addActionListener(delReq);
                     left.add(delete);
@@ -314,10 +374,26 @@ public class UI {
                     left.add(req);
                     j++;
                 }
+                bodyFiled.setText("");
+                url.setText("");
+                for (JLabel label : headers.keySet()) {
+                    label.setVisible(false);
+                    headers.get(label).setVisible(false);
+                }
+                for (JButton button1 : headerButtons) {
+                    button1.setVisible(false);
+                }
+                headers.clear();
                 newRequestGetter.setVisible(false);
                 urlType.setSelectedItem(reqType.getSelectedItem().toString());
-                center.setVisible(true);
+                centerTab.setVisible(true);
+                url.setVisible(true);
+                urlType.setVisible(true);
+                send.setVisible(true);
+                save.setVisible(true);
+
                 onRequest = name.getText();
+                reSize();
             }
         }
     }
@@ -341,11 +417,11 @@ public class UI {
                     urlType.setSelectedItem(i.getUrlType().toString());
                     bodyFiled.setText(i.getBody());
                     url.setText(i.getUrl());
-                    for(JLabel label:headers.keySet()){
+                    for (JLabel label : headers.keySet()) {
                         label.setVisible(false);
                         headers.get(label).setVisible(false);
                     }
-                    for(JButton button1:headerButtons){
+                    for (JButton button1 : headerButtons) {
                         button1.setVisible(false);
                     }
                     headerButtons.clear();
@@ -355,31 +431,39 @@ public class UI {
                     }
                     int k = 0;
                     JLabel value;
-                    delHeader delHeader=new delHeader();
+                    delHeader delHeader = new delHeader();
                     for (JLabel label : headers.keySet()) {
-                        label.setSize(100, 30);
+                        label.setForeground(Color.WHITE);
+                        label.setSize((width - 200) / 4, 30);
                         label.setLocation(10, 20 + k * 40);
                         value = headers.get(label);
-                        value.setSize(100, 30);
-                        value.setLocation(115, 20 + k * 40);
+                        value.setForeground(Color.WHITE);
+                        value.setSize((width - 200) / 8, 30);
+                        value.setLocation((width - 200) / 8 + 20, 20 + k * 40);
                         header.add(label);
                         header.add(value);
                         label.setVisible(true);
                         value.setVisible(true);
                         JButton headerButton = new JButton(del);
                         headerButton.addActionListener(delHeader);
+                        headerButton.setBackground(Color.RED);
                         headerButton.setName(label.getText());
                         headerButton.setSize(30, 30);
-                        headerButton.setLocation(220, 20 + k * 40);
+                        headerButton.setLocation((width - 200) / 4 + 30, 20 + k * 40);
                         headerButtons.add(headerButton);
                         header.add(headerButton);
                         k++;
                     }
                     onRequest = i.getName();
-                    center.setVisible(true);
+                    centerTab.setVisible(true);
+                    url.setVisible(true);
+                    urlType.setVisible(true);
+                    send.setVisible(true);
+                    save.setVisible(true);
                     break;
                 }
             }
+            reSize();
         }
     }
 
@@ -393,6 +477,7 @@ public class UI {
                     request.setUrlType(urlType.getSelectedItem().toString());
                 }
             }
+            reSize();
         }
     }
 
@@ -409,15 +494,36 @@ public class UI {
                         url.setText("");
                         urlType.setSelectedItem("GET");
                         bodyType.setSelectedItem("JSON");
+                        centerTab.setVisible(false);
+                        url.setVisible(false);
+                        urlType.setVisible(false);
+                        send.setVisible(false);
+                        save.setVisible(false);
+                        for(JLabel label :headers.keySet()){
+                            label.setVisible(false);
+                            headers.get(label).setVisible(false);
+                        }
                         headers.clear();
-                        center.setVisible(false);
+                        for(JButton button1:headerButtons){
+                            button1.setVisible(false);
+                        }
+                        headerButtons.clear();
                     }
+                    for(JLabel label :headers.keySet()){
+                        label.setVisible(false);
+                        headers.get(label).setVisible(false);
+                    }
+                    headers.clear();
+                    for(JButton button1:headerButtons){
+                        button1.setVisible(false);
+                    }
+                    headerButtons.clear();
+
                     requests.remove(i);
                     for (JButton button1 : reqButtons.keySet()) {
                         button1.setVisible(false);
                         reqButtons.get(button1).setVisible(false);
                     }
-                    headers.clear();
                     reqButtons.clear();
                     int j = 0;
                     delReq delReq = new delReq();
@@ -426,6 +532,7 @@ public class UI {
                     for (Request k : requests) {
                         JButton delete = new JButton(del);
                         delete.setName(k.getName());
+                        delete.setBackground(Color.RED);
                         delete.setSize(30, 30);
                         delete.setLocation(160, 80 + j * 35);
                         delete.addActionListener(delReq);
@@ -441,6 +548,7 @@ public class UI {
                     break;
                 }
             }
+            reSize();
         }
     }
 
@@ -480,7 +588,7 @@ public class UI {
             newHead.add(add);
 
             newHead.setVisible(true);
-
+            reSize();
         }
 
         private class addHeader implements ActionListener {
@@ -501,23 +609,26 @@ public class UI {
                         JLabel value = new JLabel(valueFiled.getText());
                         headers.put(head, value);
                         int k = 0;
-                        delHeader delHeader=new delHeader();
+                        delHeader delHeader = new delHeader();
                         ImageIcon del = new ImageIcon("src/delete.png");
                         for (JLabel label : headers.keySet()) {
-                            label.setSize(100, 30);
+                            label.setForeground(Color.WHITE);
+                            label.setSize((width - 200) / 8, 30);
                             label.setLocation(10, 20 + k * 40);
                             value = headers.get(label);
-                            value.setSize(100, 30);
-                            value.setLocation(115, 20 + k * 40);
+                            value.setForeground(Color.WHITE);
+                            value.setSize((width - 200) / 8, 30);
+                            value.setLocation((width - 200) / 8 + 20, 20 + k * 40);
                             header.add(label);
                             header.add(value);
                             label.setVisible(true);
                             value.setVisible(true);
                             JButton headerButton = new JButton(del);
                             headerButton.addActionListener(delHeader);
+                            headerButton.setBackground(Color.RED);
                             headerButton.setName(label.getText());
                             headerButton.setSize(30, 30);
-                            headerButton.setLocation(220, 20 + k * 40);
+                            headerButton.setLocation((width - 200) / 4 + 30, 20 + k * 40);
                             headerButtons.add(headerButton);
                             header.add(headerButton);
                             k++;
@@ -528,9 +639,11 @@ public class UI {
                         break;
                     }
                 }
+                reSize();
             }
         }
     }
+
     private class delHeader implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -545,8 +658,8 @@ public class UI {
                 label.setVisible(false);
                 headers.get(label).setVisible(false);
             }
-            for(JLabel label:headers.keySet()){
-                if(label.getText().equals(delete.getName())){
+            for (JLabel label : headers.keySet()) {
+                if (label.getText().equals(delete.getName())) {
                     headers.remove(label);
                     break;
                 }
@@ -557,27 +670,59 @@ public class UI {
             headerButtons.clear();
             int k = 0;
             JLabel value;
-            delHeader delHeader=new delHeader();
+            delHeader delHeader = new delHeader();
             ImageIcon del = new ImageIcon("src/delete.png");
             for (JLabel label : headers.keySet()) {
-                label.setSize(100, 30);
+                label.setSize((width - 200) / 8, 30);
                 label.setLocation(10, 20 + k * 40);
+                label.setForeground(Color.WHITE);
                 value = headers.get(label);
-                value.setSize(100, 30);
-                value.setLocation(115, 20 + k * 40);
+                value.setSize((width - 200) / 8, 30);
+                value.setLocation((width - 200) / 8 + 20, 20 + k * 40);
+                value.setForeground(Color.WHITE);
                 header.add(label);
                 header.add(value);
                 label.setVisible(true);
                 value.setVisible(true);
                 JButton headerButton = new JButton(del);
                 headerButton.addActionListener(delHeader);
+                headerButton.setBackground(Color.RED);
                 headerButton.setName(label.getText());
                 headerButton.setSize(30, 30);
-                headerButton.setLocation(220, 20 + k * 40);
+                headerButton.setLocation((width - 200) / 4 + 30, 20 + k * 40);
                 headerButtons.add(headerButton);
                 header.add(headerButton);
                 k++;
             }
+            reSize();
+        }
+    }
+
+    private class fullScreen implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            mainFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            reSize();
+        }
+    }
+    private class sendReq implements ActionListener{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            for(Request i:requests){
+                if(i.getName().equals(onRequest)){
+                    responseTime.setText(String.valueOf(i.getResponseTime()+"s"));
+                    responseTime.setHorizontalAlignment(JLabel.CENTER);
+                    statusCode.setText(i.getStatusCode());
+                    statusCode.setBackground(Color.green);
+                    statusCode.setHorizontalAlignment(JLabel.CENTER);
+                    statusCode.setOpaque(true);
+                    responseTime.setBackground(Color.darkGray);
+                    responseTime.setForeground(Color.WHITE);
+                    responseTime.setOpaque(true);
+                }
+            }
+            responseTime.setVisible(true);
+            statusCode.setVisible(true);
         }
     }
 }

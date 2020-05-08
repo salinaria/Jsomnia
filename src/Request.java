@@ -6,8 +6,10 @@ public class Request {
     private String name;
     private String url;
     private String urlType;
-    private HashMap<String,String>headers=new HashMap<>();
+    private HashMap<String, String> headers = new HashMap<>();
     private String body;
+    private String statusCode="OK200";
+    private double responseTime=2.69;
 
     public Request(String name, String urlType) {
         this.name = name;
@@ -33,8 +35,9 @@ public class Request {
     public HashMap<String, String> getHeaders() {
         return headers;
     }
-    public void addHeader(String header,String value){
-        headers.put(header,value);
+
+    public void addHeader(String header, String value) {
+        headers.put(header, value);
     }
 
     public void setBody(String body) {
@@ -48,4 +51,22 @@ public class Request {
     public void setUrlType(String urlType) {
         this.urlType = urlType;
     }
+
+    public double getResponseTime() {
+
+        return responseTime;
+    }
+
+    public void setResponseTime(double responseTime) {
+        this.responseTime = responseTime;
+    }
+
+    public void setStatusCode(String statusCode) {
+        this.statusCode = statusCode;
+    }
+
+    public String getStatusCode() {
+        return statusCode;
+    }
+
 }
