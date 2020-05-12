@@ -7,13 +7,15 @@ public class Request {
     private String url;
     private String urlType;
     private HashMap<String, String> headers = new HashMap<>();
-    private String body;
+    private String json;
+    private String bodyType;
     private String statusCode="OK200";
     private double responseTime=2.69;
 
     public Request(String name, String urlType) {
         this.name = name;
         this.urlType = urlType;
+        this.bodyType="Form Data";
     }
 
     public String getName() {
@@ -28,9 +30,10 @@ public class Request {
         return url;
     }
 
-    public String getBody() {
-        return body;
+    public String getJson() {
+        return json;
     }
+
 
     public HashMap<String, String> getHeaders() {
         return headers;
@@ -40,8 +43,17 @@ public class Request {
         headers.put(header, value);
     }
 
-    public void setBody(String body) {
-        this.body = body;
+    public void removeHeader(String header){
+        for(String key:headers.keySet()){
+            if(key.equals(header)){
+                headers.remove(key);
+                break;
+            }
+        }
+    }
+
+    public void setJson(String json) {
+        this.json = json;
     }
 
     public void setUrl(String url) {
@@ -69,4 +81,11 @@ public class Request {
         return statusCode;
     }
 
+    public void setBodyType(String bodyType) {
+        this.bodyType = bodyType;
+    }
+
+    public String getBodyType() {
+        return bodyType;
+    }
 }
