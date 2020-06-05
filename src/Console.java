@@ -106,6 +106,7 @@ public class Console {
                 case "fire":{
                     File saves = new File("./Saves/");
                     File[] files = saves.listFiles();
+                    System.out.println("hi");
                     break;
                 }
                 case "-S":
@@ -115,6 +116,7 @@ public class Console {
                     assert files != null;
                     int name = files.length + 1;
                     FileOutputStream fout = new FileOutputStream("./Saves/Save" + name + ".txt");
+                    System.out.println("hi");
                     ObjectOutputStream out = new ObjectOutputStream(fout);
                     assert connection != null;
                     out.writeObject(new Connection(connection.getURL().toString()
