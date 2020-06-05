@@ -1,5 +1,3 @@
-import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Request {
@@ -7,6 +5,7 @@ public class Request {
     private String url;
     private String urlType;
     private HashMap<String, String> headers = new HashMap<>();
+    private HashMap<String, String> data = new HashMap<>();
     private String json;
     private String bodyType;
     private String statusCode="OK200";
@@ -47,6 +46,23 @@ public class Request {
         for(String key:headers.keySet()){
             if(key.equals(header)){
                 headers.remove(key);
+                break;
+            }
+        }
+    }
+
+    public HashMap<String, String> getData() {
+        return data;
+    }
+
+    public void addData(String header, String value) {
+        data.put(header, value);
+    }
+
+    public void removeData(String header){
+        for(String key:data.keySet()){
+            if(key.equals(header)){
+                data.remove(key);
                 break;
             }
         }

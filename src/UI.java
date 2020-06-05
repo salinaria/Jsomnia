@@ -1,11 +1,6 @@
-import com.sun.xml.internal.messaging.saaj.soap.JpegDataContentHandler;
-import com.sun.xml.internal.ws.policy.EffectiveAlternativeSelector;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.ImageObserver;
-import java.awt.image.ImageProducer;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +24,7 @@ public class UI {
     public UI() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
         FileReader reader = null;
         try {
-            reader = new FileReader("src/Options.txt");
+            reader = new FileReader("src/UI/Options.txt");
         } catch (FileNotFoundException ex) {
             ex.printStackTrace();
         }
@@ -224,7 +219,7 @@ public class UI {
                 public void actionPerformed(ActionEvent e) {
                     systemTray = ((JCheckBox) e.getSource()).isSelected();
                     try {
-                        FileWriter writer = new FileWriter("src/Options.txt");
+                        FileWriter writer = new FileWriter("src/UI/Options.txt");
                         if (followRedirect) writer.write('1');
                         else writer.write('0');
                         if (systemTray) writer.write('1');
@@ -241,7 +236,7 @@ public class UI {
                 public void actionPerformed(ActionEvent e) {
                     followRedirect = ((JCheckBox) e.getSource()).isSelected();
                     try {
-                        FileWriter writer = new FileWriter("src/Options.txt");
+                        FileWriter writer = new FileWriter("src/UI/Options.txt");
                         if (followRedirect) writer.write('1');
                         else writer.write('0');
                         if (systemTray) writer.write('1');
@@ -316,7 +311,7 @@ public class UI {
             this.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
 
             //App logo
-            ImageIcon jsomnia = new ImageIcon("src/Jsomnia.png");
+            ImageIcon jsomnia = new ImageIcon("src/UI/Jsomnia.png");
             JLabel jsomniaLabel = new JLabel(jsomnia);
             jsomniaLabel.setSize(200, 50);
             jsomniaLabel.setLocation(0, 0);
@@ -355,7 +350,7 @@ public class UI {
                 loadRequests.add(loadRequestButton);
 
                 //Delete Request Button
-                JButton deleteRequestButton = new JButton(new ImageIcon("src/delete.png"));
+                JButton deleteRequestButton = new JButton(new ImageIcon("src/UI/delete.png"));
                 deleteRequestButton.setBackground(Color.RED);
                 deleteRequestButton.setSize(30, 30);
                 deleteRequestButton.setLocation(160, 150 + j * 40);
@@ -647,7 +642,7 @@ public class UI {
                             checkHeaders.add(headerCheck);
                             this.add(headerCheck);
 
-                            JButton delButton = new JButton(new ImageIcon("src/delete.png"));
+                            JButton delButton = new JButton(new ImageIcon("src/UI/delete.png"));
                             delButton.setBackground(Color.RED);
                             delButton.setSize(30, 30);
                             delButton.setLocation((width - 200) / 3 + 60, 20 + k * 40);
@@ -789,6 +784,7 @@ public class UI {
                 this.setSize((width - 200) / 2 - 20, height - 165);
                 json.reSize();
                 binaryFile.reSize();
+                formData.reSize();
             }
 
             private class bodyTypeHandler implements ActionListener {
@@ -812,18 +808,203 @@ public class UI {
             }
 
             private class FormData extends JPanel {
+                private HashMap<JLabel, JLabel> DataMap = new HashMap<>();
+                private ArrayList<JButton> delData = new ArrayList<>();
+                private ArrayList<JCheckBoxMenuItem> checkData = new ArrayList<>();
+                private JButton newData = new JButton("New Data");
+
+                public void reSize() {
+                    newData.setLocation((width - 200) / 2 - 120, height - 210);
+                    int k = 0;
+                    for (JLabel data : DataMap.keySet()) {
+                        data.setSize((width - 200) / 6, 30);
+                        data.setLocation(10, 60 + k * 40);
+                        JLabel value = DataMap.get(data);
+                        value.setSize((width - 200) / 6, 30);
+                        value.setLocation((width - 200) / 6 + 20, 60 + k * 40);
+                        k++;
+                        updateUI();
+                    }
+                    k = 0;
+                    for (JCheckBoxMenuItem checkBoxMenuItem : checkData) {
+                        checkBoxMenuItem.setLocation((width - 200) / 3 + 30, 63 + k * 40);
+                        k++;
+                    }
+                    k = 0;
+                    for (JButton button : delData) {
+                        button.setLocation((width - 200) / 3 + 60, 60 + k * 40);
+                        k++;
+                    }
+                    this.setSize((width - 200) / 2 - 20, height - 165);
+                    this.setLocation(5, 5);
+                }
+
+                public HashMap<JLabel, JLabel> getData() {
+                    return DataMap;
+                }
+
+                public ArrayList<JButton> getDelData() {
+                    return delData;
+                }
+
+                public ArrayList<JCheckBoxMenuItem> getCheckData() {
+                    return checkData;
+                }
+
                 public FormData() {
                     this.setLayout(null);
-                    this.setSize((width - 200) / 2 - 20, height - 215);
-                    this.setLocation(5, 50);
-                    this.setVisible(false);
-                    this.setVisible(false);
+                    this.setSize((width - 200) / 2 - 20, height - 165);
+                    this.setLocation(5, 5);
                     //Set Color
                     float[] colors = new float[3];
                     colors = Color.RGBtoHSB(40, 41, 37, colors);
                     this.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
+
+                    //New Data Button
+                    newData.setSize(100, 40);
+                    newData.setLocation((width - 200) / 2 - 120, height - 220);
+                    newData.addActionListener(new FormData.newDataHandler());
+                    ShowData();
+                    this.add(newData);
                 }
 
+                public void ShowData() {
+                    for (Request request : requests) {
+                        if (onRequest.equals(request.getName())) {
+                            for (JLabel Data : DataMap.keySet()) {
+                                Data.setVisible(false);
+                                DataMap.get(Data).setVisible(false);
+                            }
+                            DataMap.clear();
+                            for (JButton button : delData) {
+                                button.setVisible(false);
+                            }
+                            delData.clear();
+                            for (JCheckBoxMenuItem checkBoxMenuItem : checkData) {
+                                checkBoxMenuItem.setVisible(false);
+                            }
+                            checkData.clear();
+                            int k = 0;
+                            for (String Data : request.getData().keySet()) {
+                                JLabel DataLabel = new JLabel(Data);
+                                DataLabel.setBackground(Color.WHITE);
+                                DataLabel.setOpaque(true);
+                                DataLabel.setSize((width - 200) / 6, 30);
+                                DataLabel.setLocation(10, 60 + k * 40);
+                                this.add(DataLabel);
+
+                                JLabel valueLabel = new JLabel(request.getData().get(Data));
+                                valueLabel.setBackground(Color.WHITE);
+                                valueLabel.setOpaque(true);
+                                valueLabel.setSize((width - 200) / 6, 30);
+                                valueLabel.setLocation((width - 200) / 6 + 20, 60 + k * 40);
+                                this.add(valueLabel);
+
+                                DataMap.put(DataLabel, valueLabel);
+
+                                JCheckBoxMenuItem DataCheck = new JCheckBoxMenuItem();
+                                DataCheck.setSize(25, 25);
+                                DataCheck.setLocation((width - 200) / 3 + 30, 63 + k * 40);
+                                DataCheck.setBackground(Color.WHITE);
+                                DataCheck.setOpaque(true);
+                                DataCheck.setName(Data);
+                                checkData.add(DataCheck);
+                                this.add(DataCheck);
+
+                                JButton delButton = new JButton(new ImageIcon("src/UI/delete.png"));
+                                delButton.setBackground(Color.RED);
+                                delButton.setSize(30, 30);
+                                delButton.setLocation((width - 200) / 3 + 60, 60 + k * 40);
+                                delButton.addActionListener(new FormData.delDataHandler());
+                                delButton.setName(Data);
+                                delData.add(delButton);
+                                this.add(delButton);
+
+                                k++;
+                                updateUI();
+                            }
+                            updateUI();
+                        }
+                    }
+                    updateUI();
+                }
+
+                private class delDataHandler implements ActionListener {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        JButton del = (JButton) e.getSource();
+                        for (Request request : requests) {
+                            if (request.getName().equals(onRequest)) {
+                                for (String Data : request.getData().keySet()) {
+                                    if (del.getName().equals(Data)) {
+                                        request.removeData(Data);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        ShowData();
+                        updateUI();
+                    }
+                }
+
+                private class newDataHandler implements ActionListener {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        FormData.newDataPage newDataPage = new FormData.newDataPage();
+                    }
+                }
+
+                private class newDataPage {
+                    JFrame newData = new JFrame("New Data");
+                    JTextField Data = new JTextField();
+                    JTextField value = new JTextField();
+                    JButton add = new JButton("ADD");
+
+                    public newDataPage() {
+                        newData.setLayout(null);
+                        newData.setSize(400, 150);
+
+                        JLabel DataPrint = new JLabel("Data:");
+                        DataPrint.setLocation(5, 20);
+                        DataPrint.setSize(45, 40);
+                        newData.add(DataPrint);
+
+                        Data.setSize(135, 40);
+                        Data.setLocation(55, 20);
+                        newData.add(Data);
+
+                        JLabel valuePrint = new JLabel("Value:");
+                        valuePrint.setLocation(200, 20);
+                        valuePrint.setSize(45, 40);
+                        newData.add(valuePrint);
+
+                        value.setSize(135, 40);
+                        value.setLocation(245, 20);
+                        newData.add(value);
+
+                        add.setSize(70, 35);
+                        add.setLocation(160, 65);
+                        add.addActionListener(new FormData.newDataPage.addHandler());
+                        newData.add(add);
+
+                        newData.setVisible(true);
+                    }
+
+                    private class addHandler implements ActionListener {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            newData.setVisible(false);
+                            for (Request request : requests) {
+                                if (request.getName().equals(onRequest)) {
+                                    request.addData(Data.getText(), value.getText());
+                                    ShowData();
+                                    updateUI();
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             private class BinaryFile extends JPanel {
