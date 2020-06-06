@@ -53,6 +53,7 @@ public class Console {
             e.printStackTrace();
         }
     }
+
     public static class Connection implements Serializable {
         private static final long serialVersionUID = 1L;
         private String url = "";
@@ -60,13 +61,15 @@ public class Console {
         private Map<String, List<String>> Headers = new HashMap<>();
         private boolean fRedirect = false;
         private boolean showH = false;
+        private HashMap<String, String> formData = new HashMap<>();
 
-        public Connection(String url, String reqMethod, Map<String, List<String>> headers, boolean fRedirect, boolean showH) {
+        public Connection(String url, String reqMethod, Map<String, List<String>> headers, HashMap<String, String> formData, boolean fRedirect, boolean showH) {
             this.url = url;
             this.reqMethod = reqMethod;
             Headers = headers;
             this.fRedirect = fRedirect;
             this.showH = showH;
+            this.formData = formData;
         }
 
         public HttpURLConnection getConnection() throws IOException {
@@ -75,6 +78,13 @@ public class Console {
             connection.setInstanceFollowRedirects(fRedirect);
             for (String key : Headers.keySet())
                 connection.setRequestProperty(key, String.valueOf(Headers.get(key)));
+            connection.setDoOutput(true);
+            connection.setDoInput(true);
+            if(formData.size()>0){
+                String boundary=System.currentTimeMillis()+"";
+                connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+                bufferOutFormData(formData,  boundary, new BufferedOutputStream(connection.getOutputStream()));
+            }
             return connection;
         }
 
@@ -82,9 +92,11 @@ public class Console {
             return showH;
         }
     }
+
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         HttpURLConnection connection = null;
         boolean showHeader = false;
+        HashMap<String, String> formData = new HashMap<>();
         int i = 0;
         while (i < args.length) {
             switch (args[i]) {
@@ -97,6 +109,7 @@ public class Console {
                         ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
                         Connection connection1 = (Connection) in.readObject();
                         HttpURLConnection connection2 = connection1.getConnection();
+                        connection2.disconnect();
                         System.out.println(j + ". URL: " + connection2.getURL().toString() + " | Method: " + connection2.getRequestMethod()
                                 + " | Headers: " + connection2.getRequestProperties());
                         j++;
@@ -104,28 +117,28 @@ public class Console {
                     i++;
                     break;
                 }
-                case "fire":{
+                case "fire": {
                     File saves = new File("./Saves/");
                     File[] files = saves.listFiles();
-                    while (i+1<args.length && new Scanner(args[i+1].trim()).hasNextInt()){
-                        int j=Integer.parseInt(args[i+1]);
+                    while (i + 1 < args.length && new Scanner(args[i + 1].trim()).hasNextInt()) {
+                        int j = Integer.parseInt(args[i + 1]);
                         assert files != null;
-                        ObjectInputStream in = new ObjectInputStream(new FileInputStream(files[j-1]));
+                        ObjectInputStream in = new ObjectInputStream(new FileInputStream(files[j - 1]));
                         Connection connection1 = (Connection) in.readObject();
                         HttpURLConnection connection2 = connection1.getConnection();
                         BufferedReader br;
                         try {
                             br = new BufferedReader(new InputStreamReader((connection2.getInputStream())));
-                            String output="";
+                            String output = "";
                             while ((output = br.readLine()) != null) {
                                 System.out.println(output);
                             }
-                            } catch (IOException e) {
+                        } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        if(connection1.showH){
-                            System.out.println("Response Message: "+connection2.getResponseMessage()+connection2.getResponseCode());
-                            System.out.println("Response Headers: "+connection2.getHeaderFields());
+                        if (connection1.showH) {
+                            System.out.println("Response Message: " + connection2.getResponseMessage() + connection2.getResponseCode());
+                            System.out.println("Response Headers: " + connection2.getHeaderFields());
                         }
                         i++;
                     }
@@ -138,11 +151,12 @@ public class Console {
                     File[] files = saves.listFiles();
                     assert files != null;
                     int name = files.length + 1;
+                    assert connection != null;
+                    connection.disconnect();
                     FileOutputStream fOut = new FileOutputStream("./Saves/Save" + name + ".txt");
                     ObjectOutputStream out = new ObjectOutputStream(fOut);
-                    assert connection != null;
                     out.writeObject(new Connection(connection.getURL().toString()
-                            , connection.getRequestMethod(), connection.getRequestProperties(), true, true));
+                            , connection.getRequestMethod(), connection.getRequestProperties(), formData, connection.getInstanceFollowRedirects(), showHeader));
                     out.flush();
                     out.close();
                     i++;
@@ -360,6 +374,7 @@ public class Console {
                         e.printStackTrace();
                     }
                     bufferOutFormData(fooBody, boundary, request);
+                    formData = fooBody;
                     try {
                         BufferedInputStream bufferedInputStream = new BufferedInputStream(connection.getInputStream());
                     } catch (IOException e) {
