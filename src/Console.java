@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 public class Console {
     public static void bufferOutFormData(HashMap<String, String> form, String boundary, BufferedOutputStream bufferedOutputStream) throws IOException {
@@ -106,7 +107,29 @@ public class Console {
                 case "fire":{
                     File saves = new File("./Saves/");
                     File[] files = saves.listFiles();
-                    System.out.println("hi");
+                    while (i+1<args.length && new Scanner(args[i+1].trim()).hasNextInt()){
+                        int j=Integer.parseInt(args[i+1]);
+                        assert files != null;
+                        ObjectInputStream in = new ObjectInputStream(new FileInputStream(files[j-1]));
+                        Connection connection1 = (Connection) in.readObject();
+                        HttpURLConnection connection2 = connection1.getConnection();
+                        BufferedReader br;
+                        try {
+                            br = new BufferedReader(new InputStreamReader((connection2.getInputStream())));
+                            String output="";
+                            while ((output = br.readLine()) != null) {
+                                System.out.println(output);
+                            }
+                            } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        if(connection1.showH){
+                            System.out.println("Response Message: "+connection2.getResponseMessage()+connection2.getResponseCode());
+                            System.out.println("Response Headers: "+connection2.getHeaderFields());
+                        }
+                        i++;
+                    }
+                    i++;
                     break;
                 }
                 case "-S":
@@ -115,9 +138,8 @@ public class Console {
                     File[] files = saves.listFiles();
                     assert files != null;
                     int name = files.length + 1;
-                    FileOutputStream fout = new FileOutputStream("./Saves/Save" + name + ".txt");
-                    System.out.println("hi");
-                    ObjectOutputStream out = new ObjectOutputStream(fout);
+                    FileOutputStream fOut = new FileOutputStream("./Saves/Save" + name + ".txt");
+                    ObjectOutputStream out = new ObjectOutputStream(fOut);
                     assert connection != null;
                     out.writeObject(new Connection(connection.getURL().toString()
                             , connection.getRequestMethod(), connection.getRequestProperties(), true, true));
@@ -235,7 +257,6 @@ public class Console {
                             i++;
                         }
                     } else if (connection.getHeaderFields().get("Content-Type").get(0).contains("text")) {
-                        System.out.println("ok");
                         FileWriter writer = null;
                         BufferedReader br = null;
                         try {
@@ -270,7 +291,6 @@ public class Console {
                             assert br != null;
                             while ((output = br.readLine()) != null) {
                                 assert writer != null;
-                                System.out.println("okkkkk");
                                 writer.write(output);
                             }
                         } catch (IOException e) {
