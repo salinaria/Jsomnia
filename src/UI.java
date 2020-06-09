@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -20,11 +21,13 @@ public class UI {
     private JPanel topCenter;
     private JPanel topRight;
     private JPanel rightBorder;
+    private HttpURLConnection connection;
+    private int time;
 
     public UI() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
         FileReader reader = null;
         try {
-            reader = new FileReader("src/UI/Options.txt");
+            reader = new FileReader("./UI/Options.txt");
         } catch (FileNotFoundException ex) {
             ex.printStackTrace();
         }
@@ -132,22 +135,22 @@ public class UI {
             this.add(application);
             application.add(options);
             options.addActionListener(new optionHandler());
-            options.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_MASK));
+            options.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
             application.add(exit);
 
             this.add(view);
             view.add(fullScreen);
             fullScreen.addActionListener(new UI.fullScreenHandler());
-            fullScreen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_MASK));
+            fullScreen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
             view.add(sideBar);
 
             this.add(help);
             help.add(about);
             about.addActionListener(new aboutHandler());
-            about.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_MASK));
+            about.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK));
             help.add(helpItem);
             helpItem.addActionListener(new helpHandler());
-            helpItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.CTRL_MASK));
+            helpItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.CTRL_DOWN_MASK));
         }
 
         private class aboutHandler implements ActionListener {
@@ -219,7 +222,7 @@ public class UI {
                 public void actionPerformed(ActionEvent e) {
                     systemTray = ((JCheckBox) e.getSource()).isSelected();
                     try {
-                        FileWriter writer = new FileWriter("src/UI/Options.txt");
+                        FileWriter writer = new FileWriter(".//UI/Options.txt");
                         if (followRedirect) writer.write('1');
                         else writer.write('0');
                         if (systemTray) writer.write('1');
@@ -236,7 +239,7 @@ public class UI {
                 public void actionPerformed(ActionEvent e) {
                     followRedirect = ((JCheckBox) e.getSource()).isSelected();
                     try {
-                        FileWriter writer = new FileWriter("src/UI/Options.txt");
+                        FileWriter writer = new FileWriter(".//UI/Options.txt");
                         if (followRedirect) writer.write('1');
                         else writer.write('0');
                         if (systemTray) writer.write('1');
@@ -275,7 +278,7 @@ public class UI {
                     });
                     popupMenu.add(open);
                     popupMenu.add(exit);
-                    Image image = Toolkit.getDefaultToolkit().getImage("src/trayIcon.png");
+                    Image image = Toolkit.getDefaultToolkit().getImage("./UI/trayIcon.png");
                     TrayIcon trayIcon = new TrayIcon(image, "Jsomnia", popupMenu);
                     try {
                         tray.add(trayIcon);
@@ -311,7 +314,7 @@ public class UI {
             this.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
 
             //App logo
-            ImageIcon jsomnia = new ImageIcon("src/UI/Jsomnia.png");
+            ImageIcon jsomnia = new ImageIcon("./UI/Jsomnia.png");
             JLabel jsomniaLabel = new JLabel(jsomnia);
             jsomniaLabel.setSize(200, 50);
             jsomniaLabel.setLocation(0, 0);
@@ -350,7 +353,7 @@ public class UI {
                 loadRequests.add(loadRequestButton);
 
                 //Delete Request Button
-                JButton deleteRequestButton = new JButton(new ImageIcon("src/UI/delete.png"));
+                JButton deleteRequestButton = new JButton(new ImageIcon("./UI/delete.png"));
                 deleteRequestButton.setBackground(Color.RED);
                 deleteRequestButton.setSize(30, 30);
                 deleteRequestButton.setLocation(160, 150 + j * 40);
@@ -642,7 +645,7 @@ public class UI {
                             checkHeaders.add(headerCheck);
                             this.add(headerCheck);
 
-                            JButton delButton = new JButton(new ImageIcon("src/UI/delete.png"));
+                            JButton delButton = new JButton(new ImageIcon("./UI/delete.png"));
                             delButton.setBackground(Color.RED);
                             delButton.setSize(30, 30);
                             delButton.setLocation((width - 200) / 3 + 60, 20 + k * 40);
@@ -756,6 +759,14 @@ public class UI {
                 return json.getJsonBody();
             }
 
+            public File getBinaryFile() {
+                return binaryFile.getBinaryFile();
+            }
+
+            public HashMap<JLabel, JLabel> getFormData() {
+                return formData.getDataMap();
+            }
+
             public Body() {
                 this.setSize((width - 200) / 2 - 20, height - 165);
                 this.setLocation(5, 5);
@@ -812,6 +823,10 @@ public class UI {
                 private ArrayList<JButton> delData = new ArrayList<>();
                 private ArrayList<JCheckBoxMenuItem> checkData = new ArrayList<>();
                 private JButton newData = new JButton("New Data");
+
+                public HashMap<JLabel, JLabel> getDataMap() {
+                    return DataMap;
+                }
 
                 public void reSize() {
                     newData.setLocation((width - 200) / 2 - 120, height - 210);
@@ -911,7 +926,7 @@ public class UI {
                                 checkData.add(DataCheck);
                                 this.add(DataCheck);
 
-                                JButton delButton = new JButton(new ImageIcon("src/UI/delete.png"));
+                                JButton delButton = new JButton(new ImageIcon("./UI/delete.png"));
                                 delButton.setBackground(Color.RED);
                                 delButton.setSize(30, 30);
                                 delButton.setLocation((width - 200) / 3 + 60, 60 + k * 40);
@@ -1009,7 +1024,12 @@ public class UI {
 
             private class BinaryFile extends JPanel {
                 private JFileChooser binChooser = new JFileChooser("C:\\");
-                File binaryFile;
+                private JButton chFile = new JButton("CHOOSE FILE");
+                private File binaryFile;
+
+                public File getBinaryFile() {
+                    return binaryFile;
+                }
 
                 public BinaryFile() {
                     this.setLayout(null);
@@ -1021,18 +1041,34 @@ public class UI {
                     float[] colors = new float[3];
                     colors = Color.RGBtoHSB(40, 41, 37, colors);
                     this.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
+                    chFile.setSize(110, 30);
+                    chFile.setLocation((width - 200) / 2 - 180, 0);
+                    chFile.addActionListener(new chFileHandler());
+                    this.add(chFile);
+                }
 
-                    this.add(binChooser);
-                    binChooser.setSize((width - 200) / 2 - 20, height - 215);
-                    binChooser.setLocation(0, 0);
-                    binaryFile = binChooser.getSelectedFile();
+                private class chFileHandler implements ActionListener {
+
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        JFrame binChoose = new JFrame();
+                        binChoose.setVisible(true);
+                        binChoose.setLayout(null);
+                        binChoose.setSize(550, 500);
+                        binChooser.setSize(540, 450);
+                        binChooser.setLocation(0, 0);
+                        binaryFile = binChooser.getSelectedFile();
+                        binChoose.add(binChooser);
+                        binChoose.setMinimumSize(new Dimension(550, 500));
+                        binChoose.setMaximumSize(new Dimension(550, 500));
+                    }
                 }
 
                 public void reSize() {
-                    binChooser.setSize((width - 200) / 2 - 20, height - 215);
                     this.setSize((width - 200) / 2 - 20, height - 215);
                     this.setLocation(5, 50);
-
+                    chFile.setLocation((width - 220) / 2 - 200, 0);
+                    updateUI();
                 }
             }
 
@@ -1140,9 +1176,59 @@ public class UI {
             private class sendHandler implements ActionListener {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    right.setVisible(true);
-                    topRight.setVisible(false);
+                    String[] strings = new String[50];
+                    strings[0] = url.getText();
+                    strings[1] = "-M";
+                    strings[2] = urlType.getSelectedItem().toString();
+                    int count = 3;
+                    if (followRedirect) {
+                        strings[3] = "-f";
+                        count++;
+                    }
+                    if (header.getHeaders().size() > 0) {
+                        strings[count] = "-H";
+                        count++;
+                        StringBuilder stringBuilder = new StringBuilder();
+                        for (JLabel label : header.getHeaders().keySet()) {
+                            stringBuilder.append(label.getText()).append(":").append(header.getHeaders().get(label).getText()).append(";");
+                        }
+                        strings[count] = stringBuilder.toString();
+                        count++;
+                    }
+                    if (body.getFormData().size() > 0) {
+                        strings[count] = "-D";
+                        count++;
+                        StringBuilder stringBuilder = new StringBuilder();
+                        for (JLabel label : body.getFormData().keySet()) {
+                            stringBuilder.append(label.getText()).append(":").append(body.getFormData().get(label).getText()).append(";");
+                        }
+                        strings[count] = stringBuilder.toString();
+                        count++;
+                    }
+                    strings[count] = "-C";
+                    try {
+                        int i = 0;
+                        while (strings[i] != null) {
+                            i++;
+                        }
+                        time = (int) System.currentTimeMillis();
+                        Console console = new Console();
+                        connection = console.consoleWork(strings);
+                    } catch (IOException | ClassNotFoundException ex) {
+                        ex.printStackTrace();
+                    }
+                    try {
+                        right.topRight.setCodeStatus(connection.getResponseCode() + connection.getResponseMessage());
+                        right.topRight.setResponseTime(System.currentTimeMillis() - time);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                     right.getShowHeader().printHeader();
+                    right.topRight.updateTopRight();
+                    updateUI();
+                    right.setVisible(true);
+                    updateUI();
+                    topRight.setVisible(false);
                 }
             }
 
@@ -1206,35 +1292,56 @@ public class UI {
         }
 
         private class TopRight extends JPanel {
-            private double responseTime;
-            private String codeStatus;
+            private double responseTime=12.3134111111;
+            private String codeStatus="2hellli";
+            private JLabel codeStatusLabel=new JLabel();
+            private JLabel responseTimeLabel=new JLabel();
+            public void setCodeStatus(String codeStatus) {
+                this.codeStatus = codeStatus;
+                System.out.println(codeStatus);
+            }
+
+            public void setResponseTime(double responseTime) {
+
+                this.responseTime = responseTime;
+                System.out.println(responseTime);
+            }
 
             public TopRight() {
                 this.setLayout(null);
                 this.setBackground(Color.WHITE);
                 this.setSize((width - 200) / 2, 50);
                 this.setLocation(0, 0);
-
-                codeStatus = "200OK";
-                JLabel codeStatusLabel = new JLabel(codeStatus);
-                codeStatusLabel.setSize(70, 40);
+            }
+            public void updateTopRight(){
+                codeStatusLabel.setText(codeStatus);
+                codeStatusLabel.setSize(codeStatus.length() * 9, 40);
                 codeStatusLabel.setLocation(15, 5);
-                codeStatusLabel.setBackground(Color.green);
+
+                if (codeStatus.charAt(0) == '2') {
+                    codeStatusLabel.setBackground(Color.green);
+                } else if (codeStatus.charAt(0) == '3') {
+                    codeStatusLabel.setBackground(Color.magenta);
+                } else if (codeStatus.charAt(0) == '4') {
+                    codeStatusLabel.setBackground(Color.red);
+                } else if (codeStatus.charAt(0) == '5') {
+                    codeStatusLabel.setBackground(Color.ORANGE);
+                }
                 codeStatusLabel.setHorizontalAlignment(JLabel.CENTER);
                 codeStatusLabel.setOpaque(true);
                 this.add(codeStatusLabel);
-
-                responseTime = 2.69;
-                JLabel responseTimeLabel = new JLabel(String.valueOf(responseTime) + 's');
+                codeStatusLabel.setOpaque(true);
+                String hi = String.valueOf(responseTime).charAt(0) +""+String.valueOf(responseTime).charAt(1) + String.valueOf(responseTime).charAt(2) + String.valueOf(responseTime).charAt(3);
+                responseTimeLabel.setText(hi+"s");
                 responseTimeLabel.setSize(70, 40);
-                responseTimeLabel.setLocation(120, 5);
-                responseTimeLabel.setBackground(Color.darkGray);
+                responseTimeLabel.setLocation(codeStatus.length() * 9+30, 5);
+                responseTimeLabel.setBackground(Color.DARK_GRAY);
                 responseTimeLabel.setForeground(Color.WHITE);
                 responseTimeLabel.setHorizontalAlignment(JLabel.CENTER);
                 responseTimeLabel.setOpaque(true);
                 this.add(responseTimeLabel);
+                updateUI();
             }
-
             public void reSize() {
                 this.setSize((width - 200) / 2, 50);
                 this.setSize((width - 200) / 2, 50);

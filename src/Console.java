@@ -80,10 +80,10 @@ public class Console {
                 connection.setRequestProperty(key, String.valueOf(Headers.get(key)));
             connection.setDoOutput(true);
             connection.setDoInput(true);
-            if(formData.size()>0){
-                String boundary=System.currentTimeMillis()+"";
+            if (formData.size() > 0) {
+                String boundary = System.currentTimeMillis() + "";
                 connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-                bufferOutFormData(formData,  boundary, new BufferedOutputStream(connection.getOutputStream()));
+                bufferOutFormData(formData, boundary, new BufferedOutputStream(connection.getOutputStream()));
             }
             return connection;
         }
@@ -93,13 +93,16 @@ public class Console {
         }
     }
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+    public HttpURLConnection consoleWork(String[] args) throws IOException, ClassNotFoundException {
         HttpURLConnection connection = null;
         boolean showHeader = false;
         HashMap<String, String> formData = new HashMap<>();
         int i = 0;
-        while (i < args.length) {
+        while (i < args.length && args[i] != null) {
             switch (args[i]) {
+                case "-C": {
+                    return connection;
+                }
                 case "list": {
                     File saves = new File("./Saves/");
                     File[] files = saves.listFiles();
@@ -127,18 +130,20 @@ public class Console {
                         Connection connection1 = (Connection) in.readObject();
                         HttpURLConnection connection2 = connection1.getConnection();
                         BufferedReader br;
-                        try {
-                            br = new BufferedReader(new InputStreamReader((connection2.getInputStream())));
-                            String output = "";
-                            while ((output = br.readLine()) != null) {
-                                System.out.println(output);
+                        if (connection2.getResponseCode() < 400) {
+                            try {
+                                br = new BufferedReader(new InputStreamReader((connection2.getInputStream())));
+                                String output = "";
+                                while ((output = br.readLine()) != null) {
+                                    System.out.println(output);
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
-                        } catch (IOException e) {
-                            e.printStackTrace();
                         }
                         if (connection1.showH) {
-                            System.out.println("Response Message: " + connection2.getResponseMessage() + connection2.getResponseCode());
-                            System.out.println("Response Headers: " + connection2.getHeaderFields());
+                            System.out.println("\n\nResponse Message: " + connection2.getResponseMessage() + connection2.getResponseCode());
+                            System.out.println("\n\nResponse Headers: " + connection2.getHeaderFields());
                         }
                         i++;
                     }
@@ -147,13 +152,13 @@ public class Console {
                 }
                 case "-S":
                 case "--save": {
-                    File saves = new File("./Saves/");
+                    File saves = new File("./Console/Saves/");
                     File[] files = saves.listFiles();
                     assert files != null;
                     int name = files.length + 1;
                     assert connection != null;
                     connection.disconnect();
-                    FileOutputStream fOut = new FileOutputStream("./Saves/Save" + name + ".txt");
+                    FileOutputStream fOut = new FileOutputStream("./Console/Saves/Save" + name + ".txt");
                     ObjectOutputStream out = new ObjectOutputStream(fOut);
                     out.writeObject(new Connection(connection.getURL().toString()
                             , connection.getRequestMethod(), connection.getRequestProperties(), formData, connection.getInstanceFollowRedirects(), showHeader));
@@ -196,9 +201,9 @@ public class Console {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        if (args.length != i + 1 && !args[i + 1].startsWith("-")) {
+                        if (args[i + 1] != null && args.length != i + 1 && !args[i + 1].startsWith("-")) {
                             try {
-                                writer = new FileWriter("./Outputs/" + args[i + 1] + ".html");
+                                writer = new FileWriter("./Console/Outputs/" + args[i + 1] + ".html");
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -212,7 +217,7 @@ public class Console {
                             name = name.replaceAll(":", "");
                             name = name.replaceAll(" ", "_");
                             try {
-                                writer = new FileWriter("./Outputs/" + name + ".html");
+                                writer = new FileWriter("./Console/Outputs/" + name + ".html");
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -235,7 +240,7 @@ public class Console {
                         if (args.length != i + 1 && !args[i + 1].startsWith("-")) {
                             OutputStream os = null;
                             try {
-                                os = new FileOutputStream("./Outputs/" + args[i + 1] + ".png");
+                                os = new FileOutputStream("./Console/Outputs/" + args[i + 1] + ".png");
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -257,7 +262,7 @@ public class Console {
                             name = name.replaceAll(" ", "_");
                             OutputStream os = null;
                             try {
-                                os = new FileOutputStream("./Outputs/" + name + ".png");
+                                os = new FileOutputStream("./Console/Outputs/" + name + ".png");
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -280,7 +285,7 @@ public class Console {
                         }
                         if (args.length != i + 1 && !args[i + 1].startsWith("-")) {
                             try {
-                                writer = new FileWriter("./Outputs/" + args[i + 1] + ".txt");
+                                writer = new FileWriter("./Console/Outputs/" + args[i + 1] + ".txt");
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -294,7 +299,7 @@ public class Console {
                             name = name.replaceAll(":", "");
                             name = name.replaceAll(" ", "_");
                             try {
-                                writer = new FileWriter("./Outputs/" + name + ".txt");
+                                writer = new FileWriter("./Console/Outputs/" + name + ".txt");
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -401,5 +406,6 @@ public class Console {
                     break;
             }
         }
+        return connection;
     }
 }
