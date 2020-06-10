@@ -104,7 +104,7 @@ public class Console {
                     return connection;
                 }
                 case "list": {
-                    File saves = new File("./Saves/");
+                    File saves = new File("./Console/Saves/");
                     File[] files = saves.listFiles();
                     int j = 1;
                     assert files != null;
@@ -396,9 +396,13 @@ public class Console {
                     break;
                 default:
                     URL url;
-                    if (!args[i].startsWith("http://")) {
+                    if (!args[i].startsWith("http://") || !args[i].startsWith("https://")) {
+                        System.out.println("hi");
                         url = new URL("http://" + args[i]);
-                    } else url = new URL(args[i]);
+                    } else{
+                        url = new URL(args[i]);
+                        System.out.println("hi");
+                    }
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setDoInput(true);
                     connection.setDoOutput(true);

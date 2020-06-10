@@ -22,7 +22,7 @@ public class UI {
     private JPanel topRight;
     private JPanel rightBorder;
     private HttpURLConnection connection;
-    private int time;
+    private long time;
 
     public UI() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
         FileReader reader = null;
@@ -1211,7 +1211,7 @@ public class UI {
                         while (strings[i] != null) {
                             i++;
                         }
-                        time = (int) System.currentTimeMillis();
+                        time = System.currentTimeMillis();
                         Console console = new Console();
                         connection = console.consoleWork(strings);
                     } catch (IOException | ClassNotFoundException ex) {
@@ -1225,6 +1225,7 @@ public class UI {
                     }
                     right.getShowHeader().printHeader();
                     right.topRight.updateTopRight();
+                    right.preview.rawData.update();
                     updateUI();
                     right.setVisible(true);
                     updateUI();
@@ -1273,8 +1274,8 @@ public class UI {
             this.add(topRight);
 
             this.add(type);
-            type.addTab("Headers", showHeader);
             type.addTab("Preview", preview);
+            type.addTab("Headers", showHeader);
             type.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
             type.setSize((width - 200) / 2 - 5, height - 80);
             type.setLocation(5, 55);
@@ -1292,19 +1293,18 @@ public class UI {
         }
 
         private class TopRight extends JPanel {
-            private double responseTime=12.3134111111;
-            private String codeStatus="2hellli";
-            private JLabel codeStatusLabel=new JLabel();
-            private JLabel responseTimeLabel=new JLabel();
+            private long responseTime = (long) 12.3134111111;
+            private String codeStatus = "100";
+            private JLabel codeStatusLabel = new JLabel();
+            private JLabel responseTimeLabel = new JLabel();
+
             public void setCodeStatus(String codeStatus) {
                 this.codeStatus = codeStatus;
-                System.out.println(codeStatus);
             }
 
-            public void setResponseTime(double responseTime) {
+            public void setResponseTime(long responseTime) {
 
                 this.responseTime = responseTime;
-                System.out.println(responseTime);
             }
 
             public TopRight() {
@@ -1313,7 +1313,8 @@ public class UI {
                 this.setSize((width - 200) / 2, 50);
                 this.setLocation(0, 0);
             }
-            public void updateTopRight(){
+
+            public void updateTopRight() {
                 codeStatusLabel.setText(codeStatus);
                 codeStatusLabel.setSize(codeStatus.length() * 9, 40);
                 codeStatusLabel.setLocation(15, 5);
@@ -1331,10 +1332,10 @@ public class UI {
                 codeStatusLabel.setOpaque(true);
                 this.add(codeStatusLabel);
                 codeStatusLabel.setOpaque(true);
-                String hi = String.valueOf(responseTime).charAt(0) +""+String.valueOf(responseTime).charAt(1) + String.valueOf(responseTime).charAt(2) + String.valueOf(responseTime).charAt(3);
-                responseTimeLabel.setText(hi+"s");
+                String hi = String.valueOf(responseTime).charAt(0) + "." + String.valueOf(responseTime).charAt(1) + String.valueOf(responseTime).charAt(2) ;
+                responseTimeLabel.setText(hi + "s");
                 responseTimeLabel.setSize(70, 40);
-                responseTimeLabel.setLocation(codeStatus.length() * 9+30, 5);
+                responseTimeLabel.setLocation(codeStatus.length() * 9 + 30, 5);
                 responseTimeLabel.setBackground(Color.DARK_GRAY);
                 responseTimeLabel.setForeground(Color.WHITE);
                 responseTimeLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -1342,6 +1343,7 @@ public class UI {
                 this.add(responseTimeLabel);
                 updateUI();
             }
+
             public void reSize() {
                 this.setSize((width - 200) / 2, 50);
                 this.setSize((width - 200) / 2, 50);
@@ -1355,6 +1357,9 @@ public class UI {
                 return headers;
             }
 
+            private JPanel panel = new JPanel();
+            private JScrollPane scrollPane = new JScrollPane();
+
             public void reSize() {
                 this.setSize((width - 200) / 2, height - 105);
                 this.setLocation(5, 5);
@@ -1362,10 +1367,12 @@ public class UI {
                 for (JLabel label : headers.keySet()) {
                     label.setSize((width - 200) / 5, 30);
                     label.setLocation(10, 20 + k * 40);
-                    label.setSize((width - 200) / 5, 30);
-                    label.setLocation((width - 200) / 5 + 20, 20 + k * 40);
+                    headers.get(label).setSize((width - 200) / 5, 30);
+                    headers.get(label).setLocation((width - 200) / 5 + 20, 20 + k * 40);
                     k++;
                 }
+                //scrollPane.setLocation(5,5);
+                //scrollPane.setPreferredSize(new Dimension((width - 200) / 2-10, height - 115));
             }
 
             public ShowHeader() {
@@ -1373,13 +1380,21 @@ public class UI {
                 this.setSize((width - 200) / 2, height - 105);
                 this.setLocation(5, 5);
                 this.setOpaque(true);
-                this.setLayout(null);
+
+                panel.setLayout(null);
+                panel.setOpaque(true);
 
                 //Set Color
                 float[] colors = new float[3];
                 colors = Color.RGBtoHSB(40, 41, 37, colors);
                 this.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
 
+                scrollPane.setLocation(5, 5);
+                scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+                scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+                scrollPane.setPreferredSize(new Dimension((width - 200) / 2 - 10, height - 115));
+                scrollPane.setViewportView(panel);
+                this.add(scrollPane);
             }
 
             public void printHeader() {
@@ -1389,31 +1404,25 @@ public class UI {
                 }
                 headers.clear();
                 int k = 0;
-                for (JCheckBoxMenuItem checkBoxMenuItem : center.getHeader().checkHeaders) {
-                    if (checkBoxMenuItem.isSelected()) {
-                        for (JLabel header : center.getHeader().headers.keySet()) {
-                            if (header.getText().equals(checkBoxMenuItem.getName())) {
-                                JLabel headLabel = new JLabel(header.getText());
-                                headLabel.setOpaque(true);
-                                headLabel.setBackground(Color.WHITE);
-                                headLabel.setSize((width - 200) / 5, 30);
-                                headLabel.setLocation(10, 20 + k * 40);
+                for (String str : connection.getHeaderFields().keySet()) {
+                    JLabel headLabel = new JLabel(str);
+                    headLabel.setOpaque(true);
+                    headLabel.setBackground(Color.WHITE);
+                    headLabel.setSize((width - 200) / 5, 30);
+                    headLabel.setLocation(10, 20 + k * 40);
 
-                                JLabel valueLabel = new JLabel(center.getHeader().headers.get(header).getText());
-                                valueLabel.setSize((width - 200) / 5, 30);
-                                valueLabel.setBackground(Color.WHITE);
-                                valueLabel.setLocation((width - 200) / 5 + 20, 20 + k * 40);
-                                valueLabel.setOpaque(true);
-                                headers.put(headLabel, valueLabel);
-                                headLabel.setVisible(true);
-                                valueLabel.setVisible(true);
-                                this.add(headLabel);
-                                this.add(valueLabel);
-                                k++;
-                            }
-                            updateUI();
-                        }
-                    }
+                    JLabel valueLabel = new JLabel(connection.getHeaderField(str));
+                    valueLabel.setSize((width - 200) / 5, 30);
+                    valueLabel.setBackground(Color.WHITE);
+                    valueLabel.setLocation((width - 200) / 5 + 20, 20 + k * 40);
+                    valueLabel.setOpaque(true);
+                    headers.put(headLabel, valueLabel);
+                    headLabel.setVisible(true);
+                    valueLabel.setVisible(true);
+                    panel.add(headLabel);
+                    panel.add(valueLabel);
+                    k++;
+                    updateUI();
                 }
             }
         }
@@ -1422,6 +1431,10 @@ public class UI {
             private JTabbedPane type = new JTabbedPane();
             RawData rawData = new RawData();
             VisualPreview visualPreview = new VisualPreview();
+
+            public void reSize() {
+                rawData.reSize();
+            }
 
             public Preview() {
 
@@ -1444,17 +1457,61 @@ public class UI {
             }
 
             private class RawData extends JPanel {
+                private JTextArea rawData = new JTextArea();
+                private JScrollPane scrollableTextArea = new JScrollPane();
+
+                public void reSize() {
+                    this.setSize((width - 200) / 2 - 10, height - 145);
+                    this.setLocation(5, 5);
+                    rawData.setSize((width - 200) / 2 - 30, height - 165);
+                    rawData.setLocation(5, 5);
+                    scrollableTextArea.setLocation(5, 5);
+                    scrollableTextArea.setSize((width - 200) / 2 - 20, height - 155);
+                    scrollableTextArea.setPreferredSize(new Dimension((width - 200) / 2 - 30, height - 165));
+                }
+
+                public void update() {
+                    String str = "";
+                    try {
+                        if (connection != null) {
+                            if (connection.getResponseCode() < 400) {
+                                try {
+                                    BufferedReader br = new BufferedReader(new InputStreamReader((connection.getInputStream())));
+                                    String output = "";
+                                    while ((output = br.readLine()) != null) {
+                                        str = str + output + "\n";
+                                    }
+                                    rawData.setText(str);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
                 public RawData() {
                     this.setSize((width - 200) / 2 - 10, height - 145);
                     this.setLocation(5, 5);
                     this.setOpaque(true);
                     this.setLayout(null);
-
                     //Set Color
                     float[] colors = new float[3];
                     colors = Color.RGBtoHSB(40, 41, 37, colors);
                     this.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
-
+                    rawData.setSize((width - 200) / 2 - 30, height - 165);
+                    rawData.setLocation(5, 5);
+                    scrollableTextArea = new JScrollPane(rawData);
+                    scrollableTextArea.setLocation(5, 5);
+                    scrollableTextArea.setSize((width - 200) / 2 - 20, height - 155);
+                    scrollableTextArea.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+                    scrollableTextArea.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                    scrollableTextArea.setPreferredSize(new Dimension((width - 200) / 2 - 30, height - 165));
+                    this.add(scrollableTextArea);
                 }
             }
 
