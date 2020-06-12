@@ -121,7 +121,7 @@ public class Console {
                     break;
                 }
                 case "fire": {
-                    File saves = new File("./Saves/");
+                    File saves = new File("./Console/Saves/");
                     File[] files = saves.listFiles();
                     while (i + 1 < args.length && new Scanner(args[i + 1].trim()).hasNextInt()) {
                         int j = Integer.parseInt(args[i + 1]);
@@ -130,6 +130,11 @@ public class Console {
                         Connection connection1 = (Connection) in.readObject();
                         HttpURLConnection connection2 = connection1.getConnection();
                         BufferedReader br;
+                        if (connection2.getInstanceFollowRedirects()) {
+                            while (connection2.getHeaderFields().containsKey("Location")) {
+                                connection2 = (HttpURLConnection) new URL(connection2.getHeaderFields().get("Location").get(0)).openConnection();
+                            }
+                        }
                         if (connection2.getResponseCode() < 400) {
                             try {
                                 br = new BufferedReader(new InputStreamReader((connection2.getInputStream())));
@@ -201,7 +206,7 @@ public class Console {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        if (args[i + 1] != null && args.length != i + 1 && !args[i + 1].startsWith("-")) {
+                        if (args.length != i + 1 && args[i + 1] != null && !args[i + 1].startsWith("-")) {
                             try {
                                 writer = new FileWriter("./Console/Outputs/" + args[i + 1] + ".html");
                             } catch (IOException e) {
@@ -396,12 +401,10 @@ public class Console {
                     break;
                 default:
                     URL url;
-                    if (!args[i].startsWith("http://") || !args[i].startsWith("https://")) {
-                        System.out.println("hi");
+                    if (!args[i].startsWith("http://") && !args[i].startsWith("https://")) {
                         url = new URL("http://" + args[i]);
-                    } else{
+                    } else {
                         url = new URL(args[i]);
-                        System.out.println("hi");
                     }
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setDoInput(true);

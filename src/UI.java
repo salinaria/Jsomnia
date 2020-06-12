@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -23,6 +24,7 @@ public class UI {
     private JPanel rightBorder;
     private HttpURLConnection connection;
     private long time;
+    private String responseBody = "";
 
     public UI() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
         FileReader reader = null;
@@ -1206,15 +1208,24 @@ public class UI {
                         count++;
                     }
                     strings[count] = "-C";
+                    int i = 0;
+                    while (strings[i] != null) {
+                        i++;
+                    }
+                    time = System.currentTimeMillis();
+                    Console console = new Console();
                     try {
-                        int i = 0;
-                        while (strings[i] != null) {
-                            i++;
-                        }
-                        time = System.currentTimeMillis();
-                        Console console = new Console();
                         connection = console.consoleWork(strings);
-                    } catch (IOException | ClassNotFoundException ex) {
+                        if(connection.getInstanceFollowRedirects()){
+                            while (connection.getHeaderFields().containsKey("Location")){
+                                System.out.println(connection.getHeaderFields().get("Location").get(0));
+                                connection=(HttpURLConnection)new URL(connection.getHeaderFields().get("Location").get(0)).openConnection();
+                            }
+                        }
+
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    } catch (ClassNotFoundException ex) {
                         ex.printStackTrace();
                     }
                     try {
@@ -1226,6 +1237,11 @@ public class UI {
                     right.getShowHeader().printHeader();
                     right.topRight.updateTopRight();
                     right.preview.rawData.update();
+                    try {
+                        right.preview.visualPreview.update();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                     updateUI();
                     right.setVisible(true);
                     updateUI();
@@ -1289,7 +1305,7 @@ public class UI {
             showHeader.reSize();
             type.setSize((width - 200) / 2 - 5, height - 80);
             type.setLocation(5, 55);
-
+            preview.reSize();
         }
 
         private class TopRight extends JPanel {
@@ -1332,8 +1348,8 @@ public class UI {
                 codeStatusLabel.setOpaque(true);
                 this.add(codeStatusLabel);
                 codeStatusLabel.setOpaque(true);
-                String hi = String.valueOf(responseTime).charAt(0) + "." + String.valueOf(responseTime).charAt(1) + String.valueOf(responseTime).charAt(2) ;
-                responseTimeLabel.setText(hi + "s");
+                String hi = String.valueOf(responseTime).charAt(0) + "" + String.valueOf(responseTime).charAt(1) + String.valueOf(responseTime).charAt(2);
+                responseTimeLabel.setText(hi + "ms");
                 responseTimeLabel.setSize(70, 40);
                 responseTimeLabel.setLocation(codeStatus.length() * 9 + 30, 5);
                 responseTimeLabel.setBackground(Color.DARK_GRAY);
@@ -1357,9 +1373,6 @@ public class UI {
                 return headers;
             }
 
-            private JPanel panel = new JPanel();
-            private JScrollPane scrollPane = new JScrollPane();
-
             public void reSize() {
                 this.setSize((width - 200) / 2, height - 105);
                 this.setLocation(5, 5);
@@ -1381,20 +1394,12 @@ public class UI {
                 this.setLocation(5, 5);
                 this.setOpaque(true);
 
-                panel.setLayout(null);
-                panel.setOpaque(true);
 
                 //Set Color
                 float[] colors = new float[3];
                 colors = Color.RGBtoHSB(40, 41, 37, colors);
                 this.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
 
-                scrollPane.setLocation(5, 5);
-                scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-                scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-                scrollPane.setPreferredSize(new Dimension((width - 200) / 2 - 10, height - 115));
-                scrollPane.setViewportView(panel);
-                this.add(scrollPane);
             }
 
             public void printHeader() {
@@ -1419,13 +1424,14 @@ public class UI {
                     headers.put(headLabel, valueLabel);
                     headLabel.setVisible(true);
                     valueLabel.setVisible(true);
-                    panel.add(headLabel);
-                    panel.add(valueLabel);
+                    this.add(headLabel);
+                    this.add(valueLabel);
                     k++;
                     updateUI();
                 }
             }
         }
+
 
         private class Preview extends JPanel {
             private JTabbedPane type = new JTabbedPane();
@@ -1433,7 +1439,11 @@ public class UI {
             VisualPreview visualPreview = new VisualPreview();
 
             public void reSize() {
+                visualPreview.reSize();
                 rawData.reSize();
+                type.setSize((width - 200) / 2 - 10, height - 115);
+                type.setLocation(0, 0);
+
             }
 
             public Preview() {
@@ -1463,15 +1473,16 @@ public class UI {
                 public void reSize() {
                     this.setSize((width - 200) / 2 - 10, height - 145);
                     this.setLocation(5, 5);
-                    rawData.setSize((width - 200) / 2 - 30, height - 165);
+                    rawData.setSize((width - 200) / 2 - 80, height - 225);
                     rawData.setLocation(5, 5);
                     scrollableTextArea.setLocation(5, 5);
-                    scrollableTextArea.setSize((width - 200) / 2 - 20, height - 155);
-                    scrollableTextArea.setPreferredSize(new Dimension((width - 200) / 2 - 30, height - 165));
+                    scrollableTextArea.setSize((width - 200) / 2 - 40, height - 195);
+                    scrollableTextArea.setPreferredSize(new Dimension((width - 200) / 2 - 90, height - 195));
+                    updateUI();
                 }
 
                 public void update() {
-                    String str = "";
+                    responseBody = "";
                     try {
                         if (connection != null) {
                             if (connection.getResponseCode() < 400) {
@@ -1479,9 +1490,10 @@ public class UI {
                                     BufferedReader br = new BufferedReader(new InputStreamReader((connection.getInputStream())));
                                     String output = "";
                                     while ((output = br.readLine()) != null) {
-                                        str = str + output + "\n";
+                                        responseBody = responseBody + output + "\n";
                                     }
-                                    rawData.setText(str);
+                                    br.close();
+                                    rawData.setText(responseBody);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -1503,19 +1515,83 @@ public class UI {
                     float[] colors = new float[3];
                     colors = Color.RGBtoHSB(40, 41, 37, colors);
                     this.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
-                    rawData.setSize((width - 200) / 2 - 30, height - 165);
+                    rawData.setSize((width - 200) / 2 - 80, height - 225);
                     rawData.setLocation(5, 5);
                     scrollableTextArea = new JScrollPane(rawData);
                     scrollableTextArea.setLocation(5, 5);
-                    scrollableTextArea.setSize((width - 200) / 2 - 20, height - 155);
+                    scrollableTextArea.setSize((width - 200) / 2 - 40, height - 195);
                     scrollableTextArea.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
                     scrollableTextArea.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-                    scrollableTextArea.setPreferredSize(new Dimension((width - 200) / 2 - 30, height - 165));
+                    scrollableTextArea.setPreferredSize(new Dimension((width - 200) / 2 - 70, height - 195));
                     this.add(scrollableTextArea);
                 }
             }
 
             private class VisualPreview extends JPanel {
+                private JScrollPane pane = new JScrollPane();
+                private JEditorPane editorPane = new JEditorPane();
+                private JLabel imageLabel = new JLabel();
+                private JTextArea text = new JTextArea();
+
+                public void reSize() {
+                    this.setSize((width - 200) / 2 - 10, height - 145);
+                    this.setLocation(5, 5);
+                    pane.setSize((width - 200) / 2 - 30, height - 195);
+                    pane.setLocation(5, 5);
+                    pane.setPreferredSize(new Dimension((width - 200) / 2 - 10, height - 145));
+
+                    editorPane.setSize((width - 200) / 2 - 20, height - 155);
+                    editorPane.setLocation(5, 5);
+
+                    imageLabel.setSize((width - 200) / 2 - 20, height - 155);
+                    imageLabel.setLocation(5, 5);
+
+                    text.setSize((width - 200) / 2 - 20, height - 155);
+                    text.setLocation(5, 5);
+
+                }
+
+                public void update() throws IOException {
+                    if (connection!=null && connection.getHeaderFields().get("Content-Type").get(0).contains("html")) {
+                        responseBody = "<html>" + responseBody;
+                        FileWriter writer = new FileWriter("./Console/Outputs/" + "birbir" + ".html");
+                        writer.write(responseBody);
+                        writer.close();
+                        editorPane.setPage(new File("./Console/Outputs/" + "birbir" + ".html").toURI().toURL());
+                        editorPane.setSize((width - 200) / 2 - 20, height - 155);
+                        editorPane.setLocation(5, 5);
+                        pane.setViewportView(editorPane);
+                        updateUI();
+                    } else if (connection!=null && connection.getHeaderFields().get("Content-Type").get(0).contains("image")) {
+                        InputStream is = connection.getURL().openStream();
+                        OutputStream os = null;
+                        try {
+                            os = new FileOutputStream("./Console/Outputs/" + "bir" + ".png");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        byte[] bytes = new byte[4096];
+                        int j;
+                        assert is != null;
+                        while ((j = is.read(bytes)) != -1) {
+                            assert os != null;
+                            os.write(bytes, 0, j);
+                        }
+                        ImageIcon image = new ImageIcon("./Console/Outputs/" + "bir" + ".png");
+                        imageLabel.setIcon(image);
+                        imageLabel.setSize((width - 200) / 2 - 20, height - 155);
+                        imageLabel.setLocation(5, 5);
+                        pane.setViewportView(imageLabel);
+                        updateUI();
+                    } else if (connection.getHeaderFields().get("Content-Type").get(0).contains("text")) {
+                        text.setText(responseBody);
+                        text.setSize((width - 200) / 2 - 20, height - 155);
+                        text.setLocation(5, 5);
+                        pane.setViewportView(text);
+                        updateUI();
+                    }
+                }
+
                 public VisualPreview() {
                     this.setSize((width - 200) / 2 - 10, height - 145);
                     this.setLocation(5, 5);
@@ -1526,7 +1602,14 @@ public class UI {
                     float[] colors = new float[3];
                     colors = Color.RGBtoHSB(40, 41, 37, colors);
                     this.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
-
+                    imageLabel.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
+                    imageLabel.setOpaque(true);
+                    this.add(pane);
+                    pane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+                    pane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                    pane.setSize((width - 200) / 2 - 30, height - 195);
+                    pane.setLocation(5, 5);
+                    pane.setPreferredSize(new Dimension((width - 200) / 2 - 10, height - 145));
                 }
             }
         }
