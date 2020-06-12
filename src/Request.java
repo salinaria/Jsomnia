@@ -21,6 +21,14 @@ public class Request {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setData(HashMap<String, String> data) {
+        this.data = data;
+    }
+
     public String getUrlType() {
         return urlType;
     }
@@ -32,7 +40,9 @@ public class Request {
     public String getJson() {
         return json;
     }
-
+    public void setHeaders(HashMap<String, String> headers) {
+        this.headers = headers;
+    }
 
     public HashMap<String, String> getHeaders() {
         return headers;
@@ -104,4 +114,5 @@ public class Request {
     public String getBodyType() {
         return bodyType;
     }
+
 }

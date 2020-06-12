@@ -5,8 +5,6 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 public class Console {
@@ -56,20 +54,29 @@ public class Console {
 
     public static class Connection implements Serializable {
         private static final long serialVersionUID = 1L;
+        private String name="";
         private String url = "";
         private String reqMethod = "GET";
-        private Map<String, List<String>> Headers = new HashMap<>();
+        private HashMap<String,String> Headers = new HashMap<>();
         private boolean fRedirect = false;
         private boolean showH = false;
         private HashMap<String, String> formData = new HashMap<>();
 
-        public Connection(String url, String reqMethod, Map<String, List<String>> headers, HashMap<String, String> formData, boolean fRedirect, boolean showH) {
+        public Connection(String url, String reqMethod, HashMap<String,String> headers, HashMap<String, String> formData, boolean fRedirect, boolean showH) {
             this.url = url;
             this.reqMethod = reqMethod;
             Headers = headers;
             this.fRedirect = fRedirect;
             this.showH = showH;
             this.formData = formData;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
         }
 
         public HttpURLConnection getConnection() throws IOException {
@@ -90,6 +97,15 @@ public class Console {
 
         public boolean isShowH() {
             return showH;
+        }
+        public Request getRequest(){
+            Request request=new Request(name,reqMethod);
+            request.setHeaders(Headers);
+            System.out.println(url);
+            request.setUrl(url);
+            request.setData(formData);
+            request.setName(name);
+            return request;
         }
     }
 
@@ -157,6 +173,7 @@ public class Console {
                 }
                 case "-S":
                 case "--save": {
+
                     File saves = new File("./Console/Saves/");
                     File[] files = saves.listFiles();
                     assert files != null;
@@ -165,8 +182,19 @@ public class Console {
                     connection.disconnect();
                     FileOutputStream fOut = new FileOutputStream("./Console/Saves/Save" + name + ".txt");
                     ObjectOutputStream out = new ObjectOutputStream(fOut);
-                    out.writeObject(new Connection(connection.getURL().toString()
-                            , connection.getRequestMethod(), connection.getRequestProperties(), formData, connection.getInstanceFollowRedirects(), showHeader));
+                    HashMap<String,String> map=new HashMap<>();
+                    for(String string:connection.getRequestProperties().keySet()){
+                        map.put(string,connection.getRequestProperty(string));
+                    }
+                    Connection connection1=new Connection(connection.getURL().toString()
+                            , connection.getRequestMethod(), map, formData, connection.getInstanceFollowRedirects(), showHeader);
+                    if(args[i+1]!=null && !args[i+1].startsWith("-")){
+                        connection1.setName(args[i+1]);
+                        i++;
+                    }else{
+                        connection1.setName(connection.getURL().toString());
+                    }
+                    out.writeObject(connection1);
                     out.flush();
                     out.close();
                     i++;

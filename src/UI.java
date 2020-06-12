@@ -27,6 +27,27 @@ public class UI {
     private String responseBody = "";
 
     public UI() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
+        File saves = new File("./Console/Saves/");
+        File[] files = saves.listFiles();
+        assert files != null;
+        for (File file : files) {
+            ObjectInputStream in = null;
+            try {
+                in = new ObjectInputStream(new FileInputStream(file));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Console.Connection connection1 = null;
+            try {
+                connection1 = (Console.Connection) in.readObject();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Request request = connection1.getRequest();
+            requests.add(request);
+
+        }
+        left.ShowRequests();
         FileReader reader = null;
         try {
             reader = new FileReader("./UI/Options.txt");
@@ -399,6 +420,12 @@ public class UI {
                         center.setTopCenter(request);
                         center.setBody(request);
                         center.getHeader().ShowHeader();
+                        center.setOnRequest(request.getName());
+                        center.setTopCenter(request);
+                        center.setBody(request);
+                        center.getHeader().ShowHeader();
+                        center.setVisible(true);
+                        topCenter.setVisible(false);
                     }
                 }
             }
@@ -1216,10 +1243,10 @@ public class UI {
                     Console console = new Console();
                     try {
                         connection = console.consoleWork(strings);
-                        if(connection.getInstanceFollowRedirects()){
-                            while (connection.getHeaderFields().containsKey("Location")){
+                        if (connection.getInstanceFollowRedirects()) {
+                            while (connection.getHeaderFields().containsKey("Location")) {
                                 System.out.println(connection.getHeaderFields().get("Location").get(0));
-                                connection=(HttpURLConnection)new URL(connection.getHeaderFields().get("Location").get(0)).openConnection();
+                                connection = (HttpURLConnection) new URL(connection.getHeaderFields().get("Location").get(0)).openConnection();
                             }
                         }
 
@@ -1258,6 +1285,43 @@ public class UI {
                             request.setUrl(url.getText());
                             request.setBodyType(body.getBodyType());
                             request.setJson(body.getJson());
+                            String[] strings = new String[50];
+                            strings[0] = url.getText();
+                            strings[1] = "-M";
+                            strings[2] = urlType.getSelectedItem().toString();
+                            int count = 3;
+                            if (followRedirect) {
+                                strings[3] = "-f";
+                                count++;
+                            }
+                            if (header.getHeaders().size() > 0) {
+                                strings[count] = "-H";
+                                count++;
+                                StringBuilder stringBuilder = new StringBuilder();
+                                for (JLabel label : header.getHeaders().keySet()) {
+                                    stringBuilder.append(label.getText()).append(":").append(header.getHeaders().get(label).getText()).append(";");
+                                }
+                                strings[count] = stringBuilder.toString();
+                                count++;
+                            }
+                            if (body.getFormData().size() > 0) {
+                                strings[count] = "-D";
+                                count++;
+                                StringBuilder stringBuilder = new StringBuilder();
+                                for (JLabel label : body.getFormData().keySet()) {
+                                    stringBuilder.append(label.getText()).append(":").append(body.getFormData().get(label).getText()).append(";");
+                                }
+                                strings[count] = stringBuilder.toString();
+                                count++;
+                            }
+                            strings[count] = "-S";
+                            strings[count+1]=request.getName();
+                            Console console = new Console();
+                            try {
+                                connection = console.consoleWork(strings);
+                            } catch (IOException | ClassNotFoundException ex) {
+                                ex.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -1552,7 +1616,7 @@ public class UI {
                 }
 
                 public void update() throws IOException {
-                    if (connection!=null && connection.getHeaderFields().get("Content-Type").get(0).contains("html")) {
+                    if (connection != null && connection.getHeaderFields().get("Content-Type").get(0).contains("html")) {
                         responseBody = "<html>" + responseBody;
                         FileWriter writer = new FileWriter("./Console/Outputs/" + "birbir" + ".html");
                         writer.write(responseBody);
@@ -1562,7 +1626,7 @@ public class UI {
                         editorPane.setLocation(5, 5);
                         pane.setViewportView(editorPane);
                         updateUI();
-                    } else if (connection!=null && connection.getHeaderFields().get("Content-Type").get(0).contains("image")) {
+                    } else if (connection != null && connection.getHeaderFields().get("Content-Type").get(0).contains("image")) {
                         InputStream is = connection.getURL().openStream();
                         OutputStream os = null;
                         try {
