@@ -6,6 +6,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class UI {
 
@@ -140,7 +141,51 @@ public class UI {
             reSize();
         }
     }
+    public class Worker extends SwingWorker<String,String>{
+        private String [] args;
 
+        public Worker(String [] args) {
+            this.args = args;
+        }
+        @Override
+        protected String doInBackground() throws Exception {
+            Console console = new Console();
+            console.consoleWork(args);
+            return "";
+        }
+
+        @Override
+        protected void process(List<String> chunks) {
+            try {
+                if (followRedirect) {
+                    while (connection.getHeaderFields().containsKey("Location")) {
+                        System.out.println(connection.getHeaderFields().get("Location").get(0));
+                        connection = (HttpURLConnection) new URL(connection.getHeaderFields().get("Location").get(0)).openConnection();
+                    }
+                }
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            try {
+                right.topRight.setCodeStatus(connection.getResponseCode() + connection.getResponseMessage());
+                right.topRight.setResponseTime(System.currentTimeMillis() - time);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            right.getShowHeader().printHeader();
+            right.topRight.updateTopRight();
+            right.preview.rawData.update();
+            try {
+                right.preview.visualPreview.update();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            right.setVisible(true);
+            topRight.setVisible(false);
+            super.process(chunks);
+        }
+    }
     private class Top extends JMenuBar {
         private JMenu application = new JMenu("Application");
         private JMenuItem options = new JMenuItem("Options");
@@ -571,7 +616,6 @@ public class UI {
             this.add(type);
             updateUI();
         }
-
         private class Header extends JPanel {
             private HashMap<JLabel, JLabel> headers = new HashMap<>();
             private ArrayList<JButton> delHeader = new ArrayList<>();
@@ -936,7 +980,6 @@ public class UI {
                                 DataLabel.setSize((width - 200) / 6, 30);
                                 DataLabel.setLocation(10, 60 + k * 40);
                                 this.add(DataLabel);
-
                                 JLabel valueLabel = new JLabel(request.getData().get(Data));
                                 valueLabel.setBackground(Color.WHITE);
                                 valueLabel.setOpaque(true);
@@ -1055,7 +1098,7 @@ public class UI {
                 private JFileChooser binChooser = new JFileChooser("C:\\");
                 private JButton chFile = new JButton("CHOOSE FILE");
                 private File binaryFile;
-
+                private JTextField fileName=new JTextField();
                 public File getBinaryFile() {
                     return binaryFile;
                 }
@@ -1071,32 +1114,35 @@ public class UI {
                     colors = Color.RGBtoHSB(40, 41, 37, colors);
                     this.setBackground(Color.getHSBColor(colors[0], colors[1], colors[2]));
                     chFile.setSize(110, 30);
-                    chFile.setLocation((width - 200) / 2 - 180, 0);
+                    chFile.setLocation((width - 200) / 2 - 130, 0);
                     chFile.addActionListener(new chFileHandler());
+
+                    fileName.setSize((width - 200) / 2 - 150,30);
+                    fileName.setLocation(0,0);
+                    this.add(fileName);
                     this.add(chFile);
+
                 }
 
                 private class chFileHandler implements ActionListener {
 
                     @Override
                     public void actionPerformed(ActionEvent actionEvent) {
-                        JFrame binChoose = new JFrame();
-                        binChoose.setVisible(true);
-                        binChoose.setLayout(null);
-                        binChoose.setSize(550, 500);
-                        binChooser.setSize(540, 450);
-                        binChooser.setLocation(0, 0);
-                        binaryFile = binChooser.getSelectedFile();
-                        binChoose.add(binChooser);
-                        binChoose.setMinimumSize(new Dimension(550, 500));
-                        binChoose.setMaximumSize(new Dimension(550, 500));
+                        int result = binChooser.showOpenDialog(new JFrame());
+                        if (result == JFileChooser.APPROVE_OPTION) {
+                            binaryFile =binChooser.getSelectedFile();
+                            fileName.setText(binaryFile.getAbsolutePath());
+                        }
                     }
                 }
 
                 public void reSize() {
                     this.setSize((width - 200) / 2 - 20, height - 215);
                     this.setLocation(5, 50);
-                    chFile.setLocation((width - 220) / 2 - 200, 0);
+                    chFile.setLocation((width - 220) / 2 - 130, 0);
+                    fileName.setSize((width - 200) / 2 - 150,30);
+                    fileName.setLocation(0,0);
+
                     updateUI();
                 }
             }
@@ -1234,45 +1280,19 @@ public class UI {
                         strings[count] = stringBuilder.toString();
                         count++;
                     }
+                    if(body.binaryFile.getBinaryFile()!=null){
+                        strings[count]="-U";
+                        strings[count+1]=body.binaryFile.getBinaryFile().getAbsolutePath();
+                        count=count+2;
+                    }
                     strings[count] = "-C";
                     int i = 0;
                     while (strings[i] != null) {
                         i++;
                     }
                     time = System.currentTimeMillis();
-                    Console console = new Console();
-                    try {
-                        connection = console.consoleWork(strings);
-                        if (connection.getInstanceFollowRedirects()) {
-                            while (connection.getHeaderFields().containsKey("Location")) {
-                                System.out.println(connection.getHeaderFields().get("Location").get(0));
-                                connection = (HttpURLConnection) new URL(connection.getHeaderFields().get("Location").get(0)).openConnection();
-                            }
-                        }
-
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    } catch (ClassNotFoundException ex) {
-                        ex.printStackTrace();
-                    }
-                    try {
-                        right.topRight.setCodeStatus(connection.getResponseCode() + connection.getResponseMessage());
-                        right.topRight.setResponseTime(System.currentTimeMillis() - time);
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
-                    right.getShowHeader().printHeader();
-                    right.topRight.updateTopRight();
-                    right.preview.rawData.update();
-                    try {
-                        right.preview.visualPreview.update();
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
-                    updateUI();
-                    right.setVisible(true);
-                    updateUI();
-                    topRight.setVisible(false);
+                    Worker worker=new Worker(strings);
+                    worker.execute();
                 }
             }
 
@@ -1315,10 +1335,10 @@ public class UI {
                                 count++;
                             }
                             strings[count] = "-S";
-                            strings[count+1]=request.getName();
-                            Console console = new Console();
+                            strings[count + 1] = request.getName();
+                            Console console=new Console();
                             try {
-                                connection = console.consoleWork(strings);
+                                console.consoleWork(strings);
                             } catch (IOException | ClassNotFoundException ex) {
                                 ex.printStackTrace();
                             }
@@ -1412,8 +1432,7 @@ public class UI {
                 codeStatusLabel.setOpaque(true);
                 this.add(codeStatusLabel);
                 codeStatusLabel.setOpaque(true);
-                String hi = String.valueOf(responseTime).charAt(0) + "" + String.valueOf(responseTime).charAt(1) + String.valueOf(responseTime).charAt(2);
-                responseTimeLabel.setText(hi + "ms");
+                responseTimeLabel.setText(responseTime + "ms");
                 responseTimeLabel.setSize(70, 40);
                 responseTimeLabel.setLocation(codeStatus.length() * 9 + 30, 5);
                 responseTimeLabel.setBackground(Color.DARK_GRAY);
@@ -1448,8 +1467,6 @@ public class UI {
                     headers.get(label).setLocation((width - 200) / 5 + 20, 20 + k * 40);
                     k++;
                 }
-                //scrollPane.setLocation(5,5);
-                //scrollPane.setPreferredSize(new Dimension((width - 200) / 2-10, height - 115));
             }
 
             public ShowHeader() {
@@ -1457,6 +1474,7 @@ public class UI {
                 this.setSize((width - 200) / 2, height - 105);
                 this.setLocation(5, 5);
                 this.setOpaque(true);
+                this.setLayout(null);
 
 
                 //Set Color
@@ -1625,6 +1643,7 @@ public class UI {
                         editorPane.setSize((width - 200) / 2 - 20, height - 155);
                         editorPane.setLocation(5, 5);
                         pane.setViewportView(editorPane);
+                        pane.validate();
                         updateUI();
                     } else if (connection != null && connection.getHeaderFields().get("Content-Type").get(0).contains("image")) {
                         InputStream is = connection.getURL().openStream();
@@ -1646,12 +1665,14 @@ public class UI {
                         imageLabel.setSize((width - 200) / 2 - 20, height - 155);
                         imageLabel.setLocation(5, 5);
                         pane.setViewportView(imageLabel);
+                        pane.validate();
                         updateUI();
                     } else if (connection.getHeaderFields().get("Content-Type").get(0).contains("text")) {
                         text.setText(responseBody);
                         text.setSize((width - 200) / 2 - 20, height - 155);
                         text.setLocation(5, 5);
                         pane.setViewportView(text);
+                        pane.validate();
                         updateUI();
                     }
                 }
