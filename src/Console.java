@@ -202,7 +202,9 @@ public class Console {
                 }
                 case "-h":
                 case "--help":
-
+                    System.out.println("See the list of saved requests: list\nChange method of request: --method or -M\nAdd header:--headers or -H \"key1 : value1 ; key2 : value2\"\n" +
+                            "Add form data : --data or -D \"key1 : value1 ; key2 : value2\"\nSee response headers: -i\nTurn on follow redirect: -f \nSave response : --output or -O\n" +
+                            "Save request : --save or -S\nUpload a binary file: --upload -U ");
                     break;
                 case "-i":
                     showHeader = true;

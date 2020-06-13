@@ -6,7 +6,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class UI {
 
@@ -141,51 +140,35 @@ public class UI {
             reSize();
         }
     }
-    public class Worker extends SwingWorker<String,String>{
-        private String [] args;
 
-        public Worker(String [] args) {
+    public class Worker extends SwingWorker<String, String> {
+        private String[] args;
+
+        public Worker(String[] args) {
             this.args = args;
         }
+
         @Override
         protected String doInBackground() throws Exception {
             Console console = new Console();
-            console.consoleWork(args);
-            return "";
-        }
-
-        @Override
-        protected void process(List<String> chunks) {
-            try {
-                if (followRedirect) {
-                    while (connection.getHeaderFields().containsKey("Location")) {
-                        System.out.println(connection.getHeaderFields().get("Location").get(0));
-                        connection = (HttpURLConnection) new URL(connection.getHeaderFields().get("Location").get(0)).openConnection();
-                    }
+            connection=console.consoleWork(args);
+            if (followRedirect) {
+                while (connection.getHeaderFields().containsKey("Location")) {
+                    connection = (HttpURLConnection) new URL(connection.getHeaderFields().get("Location").get(0)).openConnection();
                 }
-
-            } catch (IOException ex) {
-                ex.printStackTrace();
             }
-            try {
-                right.topRight.setCodeStatus(connection.getResponseCode() + connection.getResponseMessage());
-                right.topRight.setResponseTime(System.currentTimeMillis() - time);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            right.topRight.setCodeStatus(connection.getResponseCode() + connection.getResponseMessage());
+            right.topRight.setResponseTime(System.currentTimeMillis() - time);
             right.getShowHeader().printHeader();
             right.topRight.updateTopRight();
             right.preview.rawData.update();
-            try {
-                right.preview.visualPreview.update();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            right.preview.visualPreview.update();
             right.setVisible(true);
             topRight.setVisible(false);
-            super.process(chunks);
+            return "";
         }
     }
+
     private class Top extends JMenuBar {
         private JMenu application = new JMenu("Application");
         private JMenuItem options = new JMenuItem("Options");
@@ -253,8 +236,17 @@ public class UI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFrame helpPage = new JFrame("Help");
+                helpPage.getContentPane().setBackground(Color.darkGray);
                 helpPage.setVisible(true);
-
+                String helpStr="To create new request click to new request button\nTo send request first set url then click to send button\n" +
+                        "To turn on follow redirect and system tray go to Application->options\n" +
+                        "To make the program full screen go to View\n";
+                helpPage.setSize(500,500);
+                helpPage.setLayout(null);
+                JTextArea area=new JTextArea(helpStr);
+                area.setSize(400,200);
+                area.setLocation(10,10);
+                helpPage.add(area);
             }
         }
 
@@ -616,6 +608,7 @@ public class UI {
             this.add(type);
             updateUI();
         }
+
         private class Header extends JPanel {
             private HashMap<JLabel, JLabel> headers = new HashMap<>();
             private ArrayList<JButton> delHeader = new ArrayList<>();
@@ -1098,7 +1091,8 @@ public class UI {
                 private JFileChooser binChooser = new JFileChooser("C:\\");
                 private JButton chFile = new JButton("CHOOSE FILE");
                 private File binaryFile;
-                private JTextField fileName=new JTextField();
+                private JTextField fileName = new JTextField();
+
                 public File getBinaryFile() {
                     return binaryFile;
                 }
@@ -1117,8 +1111,8 @@ public class UI {
                     chFile.setLocation((width - 200) / 2 - 130, 0);
                     chFile.addActionListener(new chFileHandler());
 
-                    fileName.setSize((width - 200) / 2 - 150,30);
-                    fileName.setLocation(0,0);
+                    fileName.setSize((width - 200) / 2 - 150, 30);
+                    fileName.setLocation(0, 0);
                     this.add(fileName);
                     this.add(chFile);
 
@@ -1130,7 +1124,7 @@ public class UI {
                     public void actionPerformed(ActionEvent actionEvent) {
                         int result = binChooser.showOpenDialog(new JFrame());
                         if (result == JFileChooser.APPROVE_OPTION) {
-                            binaryFile =binChooser.getSelectedFile();
+                            binaryFile = binChooser.getSelectedFile();
                             fileName.setText(binaryFile.getAbsolutePath());
                         }
                     }
@@ -1140,8 +1134,8 @@ public class UI {
                     this.setSize((width - 200) / 2 - 20, height - 215);
                     this.setLocation(5, 50);
                     chFile.setLocation((width - 220) / 2 - 130, 0);
-                    fileName.setSize((width - 200) / 2 - 150,30);
-                    fileName.setLocation(0,0);
+                    fileName.setSize((width - 200) / 2 - 150, 30);
+                    fileName.setLocation(0, 0);
 
                     updateUI();
                 }
@@ -1280,10 +1274,10 @@ public class UI {
                         strings[count] = stringBuilder.toString();
                         count++;
                     }
-                    if(body.binaryFile.getBinaryFile()!=null){
-                        strings[count]="-U";
-                        strings[count+1]=body.binaryFile.getBinaryFile().getAbsolutePath();
-                        count=count+2;
+                    if (body.binaryFile.getBinaryFile() != null) {
+                        strings[count] = "-U";
+                        strings[count + 1] = body.binaryFile.getBinaryFile().getAbsolutePath();
+                        count = count + 2;
                     }
                     strings[count] = "-C";
                     int i = 0;
@@ -1291,8 +1285,9 @@ public class UI {
                         i++;
                     }
                     time = System.currentTimeMillis();
-                    Worker worker=new Worker(strings);
+                    Worker worker = new Worker(strings);
                     worker.execute();
+                    updateUI();
                 }
             }
 
@@ -1336,7 +1331,7 @@ public class UI {
                             }
                             strings[count] = "-S";
                             strings[count + 1] = request.getName();
-                            Console console=new Console();
+                            Console console = new Console();
                             try {
                                 console.consoleWork(strings);
                             } catch (IOException | ClassNotFoundException ex) {
@@ -1636,20 +1631,21 @@ public class UI {
                 public void update() throws IOException {
                     if (connection != null && connection.getHeaderFields().get("Content-Type").get(0).contains("html")) {
                         responseBody = "<html>" + responseBody;
-                        FileWriter writer = new FileWriter("./Console/Outputs/" + "birbir" + ".html");
+                        FileWriter writer = new FileWriter("./UI/" + "birbir" + ".html");
                         writer.write(responseBody);
                         writer.close();
-                        editorPane.setPage(new File("./Console/Outputs/" + "birbir" + ".html").toURI().toURL());
+                        editorPane.setPage(new File("./UI/" + "birbir" + ".html").toURI().toURL());
                         editorPane.setSize((width - 200) / 2 - 20, height - 155);
                         editorPane.setLocation(5, 5);
                         pane.setViewportView(editorPane);
-                        pane.validate();
+                        pane.revalidate();
+                        pane.repaint();
                         updateUI();
                     } else if (connection != null && connection.getHeaderFields().get("Content-Type").get(0).contains("image")) {
                         InputStream is = connection.getURL().openStream();
                         OutputStream os = null;
                         try {
-                            os = new FileOutputStream("./Console/Outputs/" + "bir" + ".png");
+                            os = new FileOutputStream("./UI/" + "bir" + ".png");
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -1660,19 +1656,21 @@ public class UI {
                             assert os != null;
                             os.write(bytes, 0, j);
                         }
-                        ImageIcon image = new ImageIcon("./Console/Outputs/" + "bir" + ".png");
+                        ImageIcon image = new ImageIcon("./UI/" + "bir" + ".png");
                         imageLabel.setIcon(image);
                         imageLabel.setSize((width - 200) / 2 - 20, height - 155);
                         imageLabel.setLocation(5, 5);
                         pane.setViewportView(imageLabel);
-                        pane.validate();
+                        pane.revalidate();
+                        pane.repaint();
                         updateUI();
                     } else if (connection.getHeaderFields().get("Content-Type").get(0).contains("text")) {
                         text.setText(responseBody);
                         text.setSize((width - 200) / 2 - 20, height - 155);
                         text.setLocation(5, 5);
                         pane.setViewportView(text);
-                        pane.validate();
+                        pane.revalidate();
+                        pane.repaint();
                         updateUI();
                     }
                 }
